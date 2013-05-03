@@ -226,13 +226,11 @@ void showAllMarker::draw(){
 
 
 	// ARTK draw
-	// An easy was to see what is going on
-	// Draws the marker location and id number
+	// An easy was to see what is going on draws the marker location and id number
 	artk.draw(640,0);
 	
 	// ARTK 2D stuff
-	// See if marker ID '0' was detected
-	// and draw blue corners on that marker only
+	// See if marker ID '0' was detected and draw blue corners on that marker only
 	int myIndex = artk.getMarkerIndex(36);
 	if(myIndex >= 0) {	
 		// Get the corners
@@ -272,8 +270,8 @@ void showAllMarker::draw(){
 	for(int i=0; i<numDetected; i++) 
 	{
 		cout<<"i = "<<i<<endl;
-		ID = artk.getMarkerID(i);
-		mIndex = artk.getMarkerIndex(ID);
+		ID = artk.getMarkerID(i); // get [MarkerID] from current [MakerIndex] for identify each Maker
+		mIndex = artk.getMarkerIndex(ID); // get [MakerIndex] from current [MarkerID] for draw graphic on MarkerIndex
 		cout<<"ID = "<<ID<<endl;
 		artk.applyModelMatrix(mIndex); // input = marker index as can detected to want draw graphic **not markerID**
 		drawAR(ID);
