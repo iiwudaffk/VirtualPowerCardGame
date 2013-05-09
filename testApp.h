@@ -1,134 +1,158 @@
 #ifndef _TEST_APP
 #define _TEST_APP
 
+#include "ofxOpenCv.h"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
-#include "ofxOpenCv.h"
 #include "ofxARToolkitPlus.h"
 #include "ofVectorMath.h"
 #include "ofx3DModelLoader.h"
 #include "ofMain.h"
-
 #include "glut.h"
-#include <fstream>
+#include "powercard.h"
+//#include <fstream>
+
 
 // Uncomment this to use a camera instead of a video file
 #define CAMERA_CONNECTED
 
 class testApp : public ofBaseApp{
 
-	public:
-		void setup();
-		void update();
-		void draw();
-		
-		// draw graphic object static on marker
-		void drawAR(int markerIndex);
-		
-		// draw graphic effect
-		void drawEffect(int markerIndex);
-		
-		// calculate distance between 2 marker
-		float calDistance(ofPoint p1,ofPoint p2);
+public:
+	void setup();
+	void update();
+	void draw();
 
-		// calculate position of cards on field while marker move
-		void updateCardFieldPosition(ofPoint mTrans);
+	// draw graphic object static on marker
+	void drawAR(int markerIndex,int mrIndex);
+	void drawAR(int markerID,int mrIndex,string mname);
 
-		// return index of field position as nearest between marker and all field position
-		int findNearestFieldAndMaker(ofPoint pMarker);
+	// draw graphic effect
+	void drawEffect(int markerIndex);
 
-		void keyPressed  (int key);
-		//void keyReleased(int key);
-		//void mouseMoved(int x, int y );
-		//void mouseDragged(int x, int y, int button);
-		//void mousePressed(int x, int y, int button);
-		//void mouseReleased(int x, int y, int button);
-		//void windowResized(int w, int h);
+	// find index of first value to match input ,return -1 if no match
+	//template <class T>
+	//int findIndex (vector<T> series, T v);
+	int findIndex (vector<int> series, int v);
 
-		//float testApp::findHueInArea(cv::Mat &input, cv::Point input_point, int radius)
+	// calculate distance between 2 marker
+	//float calDistance(ofPoint p1,ofPoint p2);
 
+	void keyPressed  (int key);
+	//void keyReleased(int key);
+	//void mouseMoved(int x, int y );
+	//void mouseDragged(int x, int y, int button);
+	//void mousePressed(int x, int y, int button);
+	//void mouseReleased(int x, int y, int button);
+	//void windowResized(int w, int h);
 
-		// game state number
-		int gameState;
-		/* 
-		* 0 = open program first time
-		* 1 = found field marker
-		* 2 = p1 set card done
-		* 3 = p2 set card done
-		* 4 = p1 and p2 set card done
-		* 5 = fighting turn and calculate damage
-		* 6 = 
-		*/
+	//float testApp::findHueInArea(cv::Mat &input, cv::Point input_point, int radius)
 
-		// nearest
-		int nearIndex;
-		
-		/*
-		* 0 = card field
-		* 1 = (0.x -a , 0.y +b)
-		* 2 = (0.x -a , 0.y)
-		* 3 = (0.x -a , 0.y -b)
-		* 4 = (0.x +a , 0.y +b)
-		* 5 = (0.x +a , 0.y)
-		* 6 = (0.x +a , 0.y -b)
+	/* Size of the image */
+	int width, height;
 
-		|=====|=====|=====|
-		|  1  |  -  |  4  |
-		|=====|=====|=====|
-		|  2  |  0  |  5  |
-		|=====|=====|=====|
-		|  3  |  -  |  6  |
-		|=====|=====|=====|
+	/* Use either camera or a video file */
+	#ifdef CAMERA_CONNECTED
+	ofVideoGrabber vidGrabber;
+	#else
+	ofVideoPlayer vidPlayer;
+	#endif
 
-		*/
-		// card position reference by card field get from matrix
-		ofPoint cardFieldPos[7];
-		ofPoint cardFieldCenter;
+	/* ARToolKitPlus class */	
+	ofxARToolkitPlus artk;	
+	int threshold;
 
-		//
+	/* OpenCV images */
+	ofxCvColorImage colorImage;
+	ofxCvGrayscaleImage grayImage;
+	ofxCvGrayscaleImage	grayThres;
 
-		// 
-		int markerIDdetected[10];
-		ofMatrix4x4 mm1;
-		ofMatrix4x4 mm2;
-		ofVec3f mm3;
-		ofVec3f mm4;
-		ofPoint matrixTrans[20];
-		
-		/* Size of the image */
-		int width, height;
+	/* Image to distort on to the marker */
+	ofImage displayImage;
+
+	/* The four corners of the image */
+	vector<ofPoint> displayImageCorners;
+
+	/* Load model */
+	//ofx3DModelLoader capModel;
+	//ofx3DModelLoader squirrelModel;
+
+	// use threshold
+	bool pict;
+
+	// game state number
+	int gameState;
+	/* 
+	* 0 = open program first time ,found field card => 1
+	* 1 = found field marker ,wait: p1 set character back card && p2 set character back card => 2
+	* 2 = set character back card done ,wait: p1 flip card to front  && p2 flip card to front => 3
+
+	* 3 = set character card done ,wait: pATK set front attack card && pDEF set back support card => 4
+	* 4 = set back support card done ,wait: pDEF flip card to front => 5
+	* 5 = fighting turn and calculate damage ,wait: time delay if any pHP !=0 => 3 else => 6
+	* 6 = got winner and game end
+	*/
 	
-		/* Use either camera or a video file */
-		#ifdef CAMERA_CONNECTED
-		ofVideoGrabber vidGrabber;
-		#else
-		ofVideoPlayer vidPlayer;
-		#endif
+	// create field
+	Field f1;
+	int d1;
 
-		/* ARToolKitPlus class */	
-		ofxARToolkitPlus artk;	
-		int threshold;
-	
-		/* OpenCV images */
-		ofxCvColorImage colorImage;
-		ofxCvGrayscaleImage grayImage;
-		ofxCvGrayscaleImage	grayThres;
-	
-		/* Image to distort on to the marker */
-		ofImage displayImage;
+	// nearest marker and field
+	int nearField;
 
-		/* The four corners of the image */
-		vector<ofPoint> displayImageCorners;
+	// Image back card
+	ofImage cardBackImage;
 
-		/* Load model */
-		//ofx3DModelLoader capModel;
-		//ofx3DModelLoader squirrelModel;
+	// Image field card
+	ofImage cardFieldImage;
 
-		// get Matrix4x4 and write to file
-		/*void getMatrixToFile(ofMatrix4x4 &m);*/
+	// Player for play
+	Player PL;
+	Player PR;
 
-		// Image back card
-		ofImage cardBackImage;
+	// all character card
+	Character c1;
+	Character c2;
+	Character c3;
+	Character c4;
+	Character c5;
+	vector<Character> clist;
+
+	// all support card
+	Card sc1;
+	Card sc2;
+	Card sc3;
+	Card sc4;
+	vector<Card> sclist;
+
+	// make card list
+	//vector<Character> cardlist;
+	// make support card list
+	//vector<Card> scardlist;
+
+	// Class Calculate Damage
+	CalculateDmg CalDmg;
+
+	// markers to use
+	int mIDcField;
+	int mIDcBack;
+	int mIDscBack;
+	int mIDcAtkFront;
+	vector<int> mIDcFront;
+	vector<int> mIDscFront;
+
+	// list of marker id for detected
+	vector<int> mID;
+	// list of marker translation
+	vector<ofPoint> mTrans;
+
+	// wait time
+	int wt;
+	int it;
+	bool runtime;
+
+	// use true type font
+	ofTrueTypeFont myFont;
 
 };
 

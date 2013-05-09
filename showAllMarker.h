@@ -4,7 +4,7 @@
 #include "ofxOpenCv.h"
 #include "ofxARToolkitPlus.h"
 #include "ofVectorMath.h"
-#include "ofx3DModelLoader.h"
+//#include "ofx3DModelLoader.h"
 #include "ofMain.h"
 
 #include "glut.h"
@@ -62,8 +62,8 @@ class showAllMarker : public ofBaseApp{
 		vector<ofPoint> displayImageCorners;
 
 		/* Load model */
-		ofx3DModelLoader capModel;
-		ofx3DModelLoader squirrelModel;
+		//ofx3DModelLoader capModel;
+		//ofx3DModelLoader squirrelModel;
 };
 
 #endif

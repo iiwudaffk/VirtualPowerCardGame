@@ -1,18 +1,110 @@
 #include "testApp.h"
 
-int markerIDArray[10] = {0,1,2,3,4,5,6,7,8,9};
-//int markerIDArray[10] = {10,11,12,13,14,15,16,17,18,19};
-//int markerIDArray[10] = {20,21,22,23,24,25,26,27,28,29};
-//int markerIDArray[10] = {22,23,24,25,26,27,28,29,30,31};
-
 //--------------------------------------------------------------
 void testApp::setup(){
-	width = 800;
-	height = 600;
+	pict=true;
+	wt = 0;
+	it = 999;
+	runtime = false;
+	mIDcField = 0;
+	mIDcBack = 1;
+	mIDscBack = 1;
+	mIDcAtkFront = 9;
 
 	gameState = 0; // ready to game start
+	PL.calculateHP(-500); // set HP
+	PR.calculateHP(-500); // set HP
+
+	PL.setTurn(1); // first play
+	PR.setTurn(0); // second play
+	
+	// setup all character cards
+	c1.setCName("Dark Magician");
+	c1.setmIDBack(1);
+	c1.setmIDFront(2);
+	c1.setATK(40);
+	c1.setDEF(20);
+	float r1[10] = {0.5, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0, 1.5, 1.5, 2.0};
+	c1.setAtkRate(r1);
+
+	c2.setCName("Twinhead Dragon");
+	c2.setmIDBack(3);
+	c2.setmIDFront(4);
+	c2.setATK(35);
+	c2.setDEF(25);
+	float r2[10] = {0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.5, 1.5, 2.0};
+	c2.setAtkRate(r2);
+
+	c3.setCName("Dragon Knight");
+	c3.setmIDBack(5);
+	c3.setmIDFront(6);
+	c3.setATK(30);
+	c3.setDEF(40);
+	float r3[10] = {0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.5, 1.5, 1.5, 2.0};
+	c3.setAtkRate(r3);
+
+	c4.setCName("Elf of Light");
+	c4.setmIDBack(1);
+	c4.setmIDFront(7);
+	c4.setATK(20);
+	c4.setDEF(30);
+	float r4[10] = {0.5, 1.0, 1.0, 1.5, 1.5, 1.5, 1.5, 2.0, 2.0, 2.0};
+	c4.setAtkRate(r4);
+
+	c5.setCName("Skull Devil");
+	c5.setmIDBack(1);
+	c5.setmIDFront(8);
+	c5.setATK(50);
+	c5.setDEF(10);
+	float r5[10] = {0.5, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.5, 2.0};
+	c5.setAtkRate(r5);
+
+	mIDcFront.push_back(c1.cmIdFront());
+	mIDcFront.push_back(c2.cmIdFront());
+	mIDcFront.push_back(c3.cmIdFront());
+	mIDcFront.push_back(c4.cmIdFront());
+	mIDcFront.push_back(c5.cmIdFront());
+
+	clist.push_back(c1);
+	clist.push_back(c2);
+	clist.push_back(c3);
+	clist.push_back(c4);
+	clist.push_back(c5);
+	
+	// setup all support cards
+	sc1.setCName("Defence Fail");
+	sc1.setmIDBack(1);
+	sc1.setmIDFront(11);
+
+	sc2.setCName("Defence Full Power");
+	sc2.setmIDBack(1);
+	sc2.setmIDFront(12);
+
+	sc3.setCName("Dodge");
+	sc3.setmIDBack(1);
+	sc3.setmIDFront(13);
+
+	sc4.setCName("Return Attack");
+	sc4.setmIDBack(1);
+	sc4.setmIDFront(14);
+
+	sclist.push_back(sc1);
+	sclist.push_back(sc2);
+	sclist.push_back(sc3);
+	sclist.push_back(sc4);
+
+	mIDscFront.push_back(sc1.cmIdFront());
+	mIDscFront.push_back(sc2.cmIdFront());
+	mIDscFront.push_back(sc3.cmIdFront());
+	mIDscFront.push_back(sc4.cmIdFront());
+
+
+	delete r1,r2,r3,r4,r5;
+
+	width = 800;	height = 600;
+
 	//glutInitDisplayMode(GLUT_DEPTH);
-	vidGrabber.setVerbose(1); // ทับซ้อนกันได้
+	vidGrabber.setVerbose(true); // ทับซ้อนกันได้
 
 	// Print the markers from the "AllBchThinMarkers.png" file in the data folder
 	#ifdef CAMERA_CONNECTED
@@ -26,20 +118,14 @@ void testApp::setup(){
 	grayImage.allocate(width, height); // gray video
 	grayThres.allocate(width, height); // threshold video
 	
-	//// Load the image we are going to distort
-	//displayImage.loadImage("of.jpg");
-	//// Load the corners of the image into the vector
-	//int displayImageHalfWidth = displayImage.width / 2;
-	//int displayImageHalfHeight = displayImage.height / 2;	
-	//displayImageCorners.push_back(ofPoint(0, 0));
-	//displayImageCorners.push_back(ofPoint(displayImage.width, 0));
-	//displayImageCorners.push_back(ofPoint(displayImage.width, displayImage.height));
-	//displayImageCorners.push_back(ofPoint(0, displayImage.height));
-
-
 	// Load image card backing
 	cardBackImage.loadImage("card/336px-BackVG-DOR.png");
 	cardBackImage.mirror(1,0); //rotate x
+	cardFieldImage.loadImage("card/331px-Back-Anime-ZX-2.png");
+	cardFieldImage.mirror(1,0); //rotate x
+
+	// Load true type font
+	//myFont.loadFont();
 	
 	// This uses the default camera calibration and marker file
 	artk.setup(width, height);
@@ -56,7 +142,7 @@ void testApp::setup(){
 	// Set the threshold
 	// ARTK+ does the thresholding for us
 	// We also do it in OpenCV so we can see what it looks like for debugging
-	threshold = 85;
+	threshold = 85; // normal=85, lightless=40, dark=0
 	artk.setThreshold(threshold);
 
 	ofBackground(127,127,127);
@@ -100,7 +186,6 @@ void testApp::setup(){
 //--------------------------------------------------------------
 void testApp::update(){
 	#ifdef CAMERA_CONNECTED
-	//vidGrabber.initGrabber(width, height);
 	vidGrabber.grabFrame();
 	bool bNewFrame = vidGrabber.isFrameNew();
 	#else
@@ -130,48 +215,58 @@ void testApp::update(){
 		
 	}
 	
-
+	if(runtime)
+	{wt++;}
 	
+	if(wt>=it)
+	{runtime=false;wt=0;it=999;}
 }
-
-//float testApp::findHueInArea(cv::i &input, ofPoint input_point, int radius)
-//{
-//        cv::Rect roi_rect = cv::Rect((input_point.x-radius,input_point.x+radius), (input_point.y-radius,input_point.y+radius), radius, radius);
-//        cv::Mat temp = input(roi_rect);
-//        std::vector<cv::Mat> imgHSV;
-//        cv::split(temp, imgHSV);
-//        float meanHue = cv::mean(imgHSV[0])[0];
-//
-//        return meanHue;
-//}
-
 
 //--------------------------------------------------------------
 void testApp::draw(){
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//glEnable (GL_DEPTH_TEST);
 
-	// Main image
-	//ofSetColor(255,255,255);
-	//grayImage.draw(0, 0);
-	//colorImage.draw(0, 0);
-	//ofSetColor(102,102,102);	
+	if(pict)
+	{
+		// Threshold image
+		ofSetColor(255,255,255);
+		grayThres.draw(0, 0);
+	}else
+	{
+		// Main image
+		ofSetColor(255,255,255);
+		//grayImage.draw(0, 0);
+		colorImage.draw(0, 0);
+	}
 	
-	// Threshold image
-	ofSetColor(255,255,255);
-	//grayThres.draw(640, 0);
-	//grayThres.mirror(0,1);
-	grayThres.draw(0, 0);
-	//cardBackImage.draw(0,500,70,100);
-
 	//ofEnableAlphaBlending();    // turn on alpha blending
 	ofSetColor(255,0,0);
 	ofDrawBitmapString(ofToString(artk.getNumDetectedMarkers()) + " marker(s) found", 10, 20);
 	ofDrawBitmapString("Game State: " + ofToString(gameState), 500, 20);
 	ofDrawBitmapString("Threshold: " + ofToString(threshold), 10, 40);
 	ofDrawBitmapString("Use the Up/Down keys to adjust the threshold", 250, 40);
-	ofDrawBitmapString("Near" + ofToString(nearIndex), 10, 60);
+	ofDrawBitmapString("Near : " + ofToString(nearField), 10, 60);
+	ofDrawBitmapString("Field 0 : " + ofToString(f1.getMarkerIDsetted(0)), 10, 80);
+	ofDrawBitmapString("Field 1 : " + ofToString(f1.getMarkerIDsetted(1)), 10, 100);
+	ofDrawBitmapString("Field 2 : " + ofToString(f1.getMarkerIDsetted(2)), 10, 120);
+	ofDrawBitmapString("Field 3 : " + ofToString(f1.getMarkerIDsetted(3)), 10, 140);
+	ofDrawBitmapString("Field 4 : " + ofToString(f1.getMarkerIDsetted(4)), 10, 160);
+	ofDrawBitmapString("Field 5 : " + ofToString(f1.getMarkerIDsetted(5)), 10, 180);
+	ofDrawBitmapString("Field 6 : " + ofToString(f1.getMarkerIDsetted(6)), 10, 200);
+	ofDrawBitmapString("Field 7 : " + ofToString(f1.getMarkerIDsetted(7)), 10, 220);
+	ofDrawBitmapString("Field 8 : " + ofToString(f1.getMarkerIDsetted(8)), 10, 240);
 
+	ofDrawBitmapString("P1 HP : " + ofToString(PL.hp()), 10, 260);
+	ofDrawBitmapString("P1 Life : " + ofToString(PL.isAlive()), 10, 280);
+	ofDrawBitmapString("P2 HP : " + ofToString(PR.hp()), 10, 300);
+	ofDrawBitmapString("P2 Life : " + ofToString(PR.isAlive()), 10, 320);
+	ofDrawBitmapString("Wait Time : " + ofToString(wt), 10, 360);
+	ofDrawBitmapString("input Time : " + ofToString(it), 10, 380);
+	ofDrawBitmapString("Run Time : " + ofToString(runtime), 10, 400);
+	ofDrawBitmapString("P1 Life : " + ofToString(PL.isTurn()), 10, 420);
+	ofDrawBitmapString("P2 Life : " + ofToString(PR.isTurn()), 10, 440);
+	
 	//ofFill();
 	//ofEnableAlphaBlending();    // turn on alpha blending
 	//ofSetColor(255,0,0,127);    // red, 50% transparent
@@ -219,117 +314,328 @@ void testApp::draw(){
 
 	// Find out how many markers have been detected
 	int numDetected = artk.getNumDetectedMarkers();
-	int ID;
-	int mIndex;
-
-
 	
+	// 0 = open program first time ,
+	// wait: found field card => 1
 	if(gameState==0)
 	{
-		//cout<<" Start gameState 0 "<<endl;
+		mID.clear();
+		mTrans.clear();
 		for(int i=0; i<numDetected; i++)
 		{
-			//cout<<"i = "<<i<<endl;
-			ID = artk.getMarkerID(i); // get [MarkerID] from current [MakerIndex] for identify each Maker
-			mIndex = artk.getMarkerIndex(ID); // get [MakerIndex] from current [MarkerID] for draw graphic on MarkerIndex
-			//cout<<"ID = "<<ID<<endl;
-			artk.applyModelMatrix(mIndex); // input = marker index as want to draw graphic **not markerID**
-			//cout<<"Center = "<<artk.getDetectedMarkerCenter(mIndex); // show center of marker
-			drawAR(ID); // draw object on marker
-
-			mm1 = artk.getMatrix(mIndex);
-			mm2 = artk.getGLMatrix(mIndex);
-			matrixTrans[ID] = artk.getTranslation(mIndex);
-			cardFieldCenter = matrixTrans[0];
-			updateCardFieldPosition(matrixTrans[0]);
+			// get [MarkerID] from current [MakerIndex[i]] for identify each Maker
+			mID.push_back(artk.getMarkerID(i));
+			// get [Marker Translation] from current [MakerIndex[i]]
+			mTrans.push_back(artk.getTranslation(i));
+		}
+		for(int i=0; i<mID.size(); i++)
+		{
+			drawAR(mID[i],i); // draw object on marker
 
 			// if found [Card Field]'s marker then display drawing field object
-			if(artk.getMarkerID(i)==markerIDArray[0])
-			{					
-				// change game state
-				gameState = 1;
-				cout<<" gameState = 1 : found card field marker"<<endl;
+			if(mID[i]==mIDcField)
+			{	
+				f1.updateCardFieldPosition(mTrans[i]); // update position of initial field card
+				f1.setFieldByMarkerID(mIDcField,mID[i]); // set Field by MarkerID ,now this field not empty
+				gameState = 1; // change game state
+				cout<<"Change gameState = 1 : found card field marker"<<endl;
+				runtime = true;
 			}
+		
 		}
 	}
+	// found field marker ,
+	// wait: p1 set character back card && p2 set character back card => 2
 	else if(gameState==1)
 	{
-		//cout<<" Start gameState 1 "<<endl;
+		mID.clear();
+		mTrans.clear();
 		for(int i=0; i<numDetected; i++)
 		{
-			//cout<<"i = "<<i<<endl;
-			ID = artk.getMarkerID(i); // get [MarkerID] from current [MakerIndex] for identify each Maker
-			mIndex = artk.getMarkerIndex(ID); // get [MakerIndex] from current [MarkerID] for draw graphic on MarkerIndex
-			//cout<<"ID = "<<ID<<endl;
-			artk.applyModelMatrix(mIndex); // input = marker index as want to draw graphic **not markerID**
-			//cout<<"Center = "<<artk.getDetectedMarkerCenter(mIndex); // show center of marker
-			drawAR(ID); // draw object on marker
-	
-			mm1 = artk.getMatrix(mIndex);
-			mm2 = artk.getGLMatrix(mIndex);
-			matrixTrans[ID] = artk.getTranslation(mIndex);
-			cardFieldCenter = matrixTrans[0];
-			updateCardFieldPosition(matrixTrans[0]);
-
-			if(ID!=0)
+			// get [MarkerID] from current [MakerIndex[i]] for identify each Maker
+			mID.push_back(artk.getMarkerID(i));
+			// get [Marker Translation] from current [MakerIndex[i]]
+			mTrans.push_back(artk.getTranslation(i));
+		}
+		for(int i=0; i<mID.size(); i++)
+		{
+			if(mID[i]==mIDcField)
 			{
-				cout<<endl<<ofToString(this->calDistance(this->cardFieldPos[1],this->matrixTrans[ID]))<<endl;
-				nearIndex = this->findNearestFieldAndMaker(artk.getTranslation(mIndex));
+				// update position of initial field card
+				f1.updateCardFieldPosition(mTrans[i]); 
+			}
+			drawAR(mID[i],i); // draw object on marker
+
+			if(mID[i]==mIDcBack)
+			{
+				nearField = f1.findNearestFieldAndMaker(mTrans[i]);
+				if((nearField==2 || nearField==5) && calDistance(f1.getfPos(nearField),mTrans[i])<100)
+				{
+					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
+				}
 			}
 
-			// if player 1 set card done
-			if(artk.getMarkerID(i)==markerIDArray[1])
-			{
-				// change game state
-				gameState = 2;
-				cout<<" gameState = 2 : player 1 set card done"<<endl;
+			if(f1.getMarkerIDsetted(2)==mIDcBack && f1.getMarkerIDsetted(5)==mIDcBack)
+			{	
+				gameState = 2; // change game state
+				cout<<"Change gameState = 2 : All player set back card done"<<endl;
+				runtime = true;
 			}
 		}
 	}
+	// set character back card done ,
+	// wait: p1 flip card to front  && p2 flip card to front => 3
 	else if(gameState==2)
 	{
-		//cout<<" Start gameState 2 "<<endl;
+		mID.clear();
+		mTrans.clear();
 		for(int i=0; i<numDetected; i++)
 		{
-			//cout<<"i = "<<i<<endl;
-			ID = artk.getMarkerID(i); // get [MarkerID] from current [MakerIndex] for identify each Maker
-			mIndex = artk.getMarkerIndex(ID); // get [MakerIndex] from current [MarkerID] for draw graphic on MarkerIndex
-			//cout<<"ID = "<<ID<<endl;
-			artk.applyModelMatrix(mIndex); // input = marker index as want to draw graphic **not markerID**
-			//cout<<"Center = "<<artk.getDetectedMarkerCenter(mIndex)<<endl; // show center of marker
-			drawAR(ID); // draw object on marker
-
-			mm1 = artk.getMatrix(mIndex);
-			mm2 = artk.getGLMatrix(mIndex);
-			matrixTrans[ID] = artk.getTranslation(mIndex);
-			cardFieldCenter = matrixTrans[0];
-			updateCardFieldPosition(matrixTrans[0]);
-
-			if(ID!=0)
+			// get [MarkerID] from current [MakerIndex[i]] for identify each Maker
+			mID.push_back(artk.getMarkerID(i));
+			// get [Marker Translation] from current [MakerIndex[i]]
+			mTrans.push_back(artk.getTranslation(i));
+		}
+		for(int i=0; i<mID.size(); i++)
+		{
+			if(mID[i]==mIDcField)
 			{
-				cout<<endl<<ofToString(this->calDistance(this->cardFieldPos[1],this->matrixTrans[ID]))<<endl;
-				nearIndex = this->findNearestFieldAndMaker(artk.getTranslation(mIndex));
+				// update position of field card
+				f1.updateCardFieldPosition(mTrans[i]);
+			}; 
+			drawAR(mID[i],i); // draw object on marker
+			// check [markerID] is in [markerIDcardFront] and in field must set by mIDcBack only
+			if((findIndex(this->mIDcFront,mID[i])!=-1)/*&&(f1.getMarkerIDsetted(2)==mIDcBack)&&(f1.getMarkerIDsetted(5)==mIDcBack)*/)
+			{
+				nearField = f1.findNearestFieldAndMaker(mTrans[i]);
+				// if distance<100 set card to field
+				if((nearField==2 || nearField==5) && calDistance(f1.getfPos(nearField),mTrans[i])<100)
+				{
+					f1.setFMisEmpty(nearField);
+					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
+				}
 			}
-
-			// if player 2 set card done
-			//if(artk.getMarkerID(i)==markerIDArray[2])
-			//{
-			//	// change game state
-			//	gameState = 3;
-			//	cout<<" gameState = 3 : player 3 set card done"<<endl;
-			//}
+			// check f1.[2] and f1.[5] is contain in mIDcFront
+			if(findIndex(mIDcFront,f1.getMarkerIDsetted(2))!=-1 && findIndex(mIDcFront,f1.getMarkerIDsetted(5))!=-1)
+			{	
+				gameState = 3; // change game state
+				cout<<"Change gameState = 3 : All player flip card done"<<endl;
+				runtime = true;
+			}
 		}
 	}
-
-	/*
+	// set character card done ,
+	// wait: pATK set front attack card && pDEF set back support card => 4
 	else if(gameState==3)
 	{
+		mID.clear();
+		mTrans.clear();
 		for(int i=0; i<numDetected; i++)
 		{
+			// get [MarkerID] from current [MakerIndex[i]] for identify each Maker
+			mID.push_back(artk.getMarkerID(i));
+			// get [Marker Translation] from current [MakerIndex[i]]
+			mTrans.push_back(artk.getTranslation(i));
+		}
+		for(int i=0; i<mID.size(); i++)
+		{
+			if(mID[i]==mIDcField){f1.updateCardFieldPosition(mTrans[i]);}; // update position of field card
+			drawAR(mID[i],i); // draw object on marker
+			
+			// check attack player
+			if(mID[i]==mIDcAtkFront)
+			{
+				nearField = f1.findNearestFieldAndMaker(mTrans[i]);
+				// if distance<100 set card to field
+				if((nearField==1 && calDistance(f1.getfPos(nearField),mTrans[i])<100))
+				{
+					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
+					if(f1.getMarkerIDsetted(1)==mIDcAtkFront){PL.setTurn(1);PR.setTurn(0);} // set play turn
+					
+				}
+				else if(nearField==6 && calDistance(f1.getfPos(nearField),mTrans[i])<100)
+				{
+					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
+					if(f1.getMarkerIDsetted(6)==mIDcAtkFront){PR.setTurn(1);PL.setTurn(0);} // set play turn
+				}
+			}
+
+			// check defence player
+			if(mID[i]==mIDscBack)
+			{	
+				nearField = f1.findNearestFieldAndMaker(mTrans[i]);
+				if((nearField==3 && calDistance(f1.getfPos(nearField),mTrans[i])<100))
+				{
+					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
+					if(f1.getMarkerIDsetted(3)==mIDscBack){PL.setTurn(0);PR.setTurn(1);} // set play turn
+					
+				}
+				else if(nearField==4 && calDistance(f1.getfPos(nearField),mTrans[i])<100)
+				{
+					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
+					if(f1.getMarkerIDsetted(4)==mIDscBack){PR.setTurn(1);PL.setTurn(0);} // set play turn
+				}
+			}
+			
+		}
+		// check player turn
+			if((PL.isTurn() && f1.getMarkerIDsetted(1)==mIDcAtkFront && f1.getMarkerIDsetted(4)==mIDscBack) ||
+				(PR.isTurn() && f1.getMarkerIDsetted(6)==mIDcAtkFront && f1.getMarkerIDsetted(3)==mIDscBack))
+			{	
+				gameState = 4; // change game state
+				cout<<"Change gameState = 4 : All player ready to fight"<<endl;
+				runtime = true;
+			}
+	}
+	// set back support card done ,
+	// wait: pDEF flip card to front => 5
+	else if(gameState==4)
+	{
+		mID.clear();
+		mTrans.clear();
+		for(int i=0; i<numDetected; i++)
+		{
+			// get [MarkerID] from current [MakerIndex[i]] for identify each Maker
+			mID.push_back(artk.getMarkerID(i));
+			// get [Marker Translation] from current [MakerIndex[i]]
+			mTrans.push_back(artk.getTranslation(i));
+		}
+		for(int i=0; i<mID.size(); i++)
+		{
+			if(mID[i]==mIDcField){f1.updateCardFieldPosition(mTrans[i]);}; // update position of field card
+			drawAR(mID[i],i); // draw object on marker
+
+			// check mID is contain in mIDscFront
+			if(findIndex(mIDscFront,mID[i])!=-1)
+			{
+				nearField = f1.findNearestFieldAndMaker(mTrans[i]);
+				if(PL.isTurn() && nearField==4 && calDistance(f1.getfPos(nearField),mTrans[i])<100)
+				{
+					f1.setFMisEmpty(nearField); // clear slot for set new card
+					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
+				}
+				else if(PR.isTurn() && nearField==3 && calDistance(f1.getfPos(nearField),mTrans[i])<100)
+				{
+					f1.setFMisEmpty(nearField); // clear slot for set new card
+					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
+				}
+			}
+		}
+		// 
+		if((PL.isTurn() && findIndex(mIDscFront,f1.getMarkerIDsetted(4))!=-1) || 
+			(PR.isTurn() && findIndex(mIDscFront,f1.getMarkerIDsetted(3))!=-1))
+		{	
+			gameState = 5; // change game state
+			cout<<"Change gameState = 5 : All player flip card done"<<endl;
+			runtime = true;
+		}
+	}
+	// fighting turn and calculate damage ,
+	// wait: time delay if any pHP !=0 => 3 else => 6 
+	else if(gameState==5)
+	{
+		mID.clear();
+		mTrans.clear();
+		for(int i=0; i<numDetected; i++)
+		{
+			// get [MarkerID] from current [MakerIndex[i]] for identify each Maker
+			mID.push_back(artk.getMarkerID(i));
+			// get [Marker Translation] from current [MakerIndex[i]]
+			mTrans.push_back(artk.getTranslation(i));
+		}
+		if(PL.isTurn())
+				{
+					int ia=f1.getMarkerIDsetted(2); // id of atk character front card as set in field slot
+					int id=f1.getMarkerIDsetted(5); // id of def character front card as set in field slot
+					int idt=f1.getMarkerIDsetted(4); // id of type defence front card as set in field slot
+					int ica=0; // marker id of attack character
+					int icd=0; // marker id of defence character
+		
+					for(int j=0;j<clist.size();j++)
+					{
+						if(ia == clist[j].cmIdFront())
+						{	ica = j;	}
+					}
+					int atk = floor((clist[ica].atk() * clist[ica].atkRate())+0.5); // get total attack
+				
+					for(int j=0;j<clist.size();j++)
+					{
+						if(id == clist[j].cmIdFront())
+						{	icd = j;	}
+					}
+					int def = clist[icd].def(); //get defence
+
+				
+					CalDmg.cTdef(idt,atk,def);
+					PL.calculateHP(CalDmg.paDmg());
+					PR.calculateHP(CalDmg.pdDmg());
+				}
+				else if(PR.isTurn())
+				{
+					int ia=f1.getMarkerIDsetted(5); // id of atk character front card as set in field slot
+					int id=f1.getMarkerIDsetted(2); // id of def character front card as set in field slot
+					int idt=f1.getMarkerIDsetted(3); // id of type defence front card as set in field slot
+					int ica=0; // marker id of attack character
+					int icd=0; // marker id of defence character
+		
+					for(int j=0;j<clist.size();j++)
+					{
+						if(ia == clist[j].cmIdFront())
+						{	ica = j;	}
+					}
+					//int atk = floor((clist[ica].atk() * clist[ica].atkRate())+0.5); // get total attack
+					int atk = clist[ica].atk();
+				
+					for(int j=0;j<clist.size();j++)
+					{
+						if(id == clist[j].cmIdFront())
+						{	icd = j;	}
+					}
+					int def = clist[icd].def(); //get defence
+
+					CalDmg.cTdef(idt,atk,def);
+					PR.calculateHP(CalDmg.paDmg());
+					PL.calculateHP(CalDmg.pdDmg());
+					cout<<clist[ica].atkRate()<<"p1 atk: "<<atk<<endl;
+					cout<<"p1 atk: "<<atk<<endl;
+					cout<<"p2 def: "<<def<<endl;
+					cout<<"p1 dmg: "<<CalDmg.paDmg()<<endl;
+					cout<<"p2 dmg: "<<CalDmg.pdDmg()<<endl;
+				}
+		
+		
+		for(int i=0; i<mID.size(); i++)
+		{
+			if(mID[i]==mIDcField){f1.updateCardFieldPosition(mTrans[i]);}; // update position of field card
+			drawAR(mID[i],i); // draw object on marker
+			
+				
+				if(PL.isAlive() && PR.isAlive())
+		{	gameState = 3;	f1.setFMisEmpty(1);	f1.setFMisEmpty(3);	f1.setFMisEmpty(4);	f1.setFMisEmpty(6);}
+		else
+		{	gameState = 6;	}
 			
 		}
 	}
-	*/
+	// 6 = got winner and game end
+	else if(gameState==6)
+	{
+		mID.clear();
+		mTrans.clear();
+		for(int i=0; i<numDetected; i++)
+		{
+			// get [MarkerID] from current [MakerIndex[i]] for identify each Maker
+			mID.push_back(artk.getMarkerID(i));
+			// get [Marker Translation] from current [MakerIndex[i]]
+			mTrans.push_back(artk.getTranslation(i));
+		}
+		for(int i=0; i<mID.size(); i++)
+		{
+			if(mID[i]==mIDcField){f1.updateCardFieldPosition(mTrans[i]);}; // update position of field card
+			drawAR(mID[i],i); // draw object on marker
+		}
+	}
+	
 
 
 	//glDisable (GL_DEPTH_TEST);
@@ -339,37 +645,45 @@ void testApp::draw(){
 void testApp::keyPressed(int key){
 	if(key == OF_KEY_UP) {
 		artk.setThreshold(++threshold);
-		
 	} else if(key == OF_KEY_DOWN) {
 		artk.setThreshold(--threshold);		
+	} else if(key == 't' || key == 'T'){
+		pict = !pict;
+	}
+	else if(key == '0'){
+		gameState = 0;
+		runtime = true;
+	}
+	else if(key == '1'){
+		gameState = 1;
+		runtime = true;
+	}
+	else if(key == '2'){
+		gameState = 2;
+		runtime = true;
+	}
+	else if(key == '3'){
+		gameState = 3;
+		runtime = true;
+	}
+	else if(key == '4'){
+		gameState = 4;
+		runtime = true;
+	}
+	else if(key == '5'){
+		gameState = 5;
+		runtime = true;
+	}
+	else if(key == '6'){
+		gameState = 6;
+		runtime = true;
 	}
 	#ifdef CAMERA_CONNECTED
-	if(key == 's') {
+	if(key == 's' || key == 'S') {
 		vidGrabber.videoSettings();
 	}
 	#endif
-	if(key == 'h') {
-		//getMatrixToFile(mm1);
-		cout<<"Matrix = "<<endl<<mm1<<endl;
-	}
-	if(key == 'g'){
-		cout<<"MatrixGL = "<<endl<<mm2<<endl;
-	}
-	if(key == 'z'){
-		cout<<"cardFieldPos = "<<endl<<cardFieldPos[0]<<endl;
-	}
-	if(key == 'q'){
-		cout<<"mm3 = "<<endl<<mm3<<endl;
-	}
-	if(key == 'w'){
-		cout<<"mm4 = "<<endl<<mm4<<endl;
-	}
-	if(key == 'x'){
-		cout<<"matrixTrans = "<<endl<<matrixTrans[0]<<endl;
-	}
-	if(key == 'c'){
-		cout<<"cardFieldCenter = "<<endl<<cardFieldCenter<<endl;
-	}
+
 }
 
 /* //--------------------------------------------------------------
@@ -404,8 +718,12 @@ void testApp::windowResized(int w, int h){
 
 
 //--------------------- draw graphic on marker -----------------
-void testApp::drawAR(int markerID){
-	if(markerID==markerIDArray[0])
+void testApp::drawAR(int markerID,int mrIndex){
+	this->drawAR(markerID,mrIndex,"");
+}
+void testApp::drawAR(int markerID,int mrIndex,string mname){
+	artk.applyModelMatrix(mrIndex); //input = [marker index] as want to draw graphic **not markerID**	
+	if(markerID==mIDcField)// check if is [field card]
 	{
 		glPushMatrix();
 			ofSetLineWidth(5);
@@ -431,36 +749,88 @@ void testApp::drawAR(int markerID){
 			ofDisableAlphaBlending();   // turn off alpha
 
 			ofSetColor(255, 255, 255);
-			cardBackImage.draw(-25,-25,50,50);	
+			cardFieldImage.draw(-25,-25,50,50);	// draw image
 			glPushMatrix();
 				ofSetColor(255, 0, 255);
 				glScalef(0.5,0.5,0.5);
 				glTranslatef(-40,10,0);
 				glRotatef(180 ,1 ,0 ,0 );
 				ofDrawBitmapString("Card Field",0 , 0);
-			glPopMatrix();
-			//glTranslatef(75,75,0);
-			
+				if(gameState==1 && runtime)
+				{
+					it = 100;
+					ofSetColor(255,0,0);
+					glScalef(2,2,0);
+					ofDrawBitmapString("Found Field Card", -50, -50);
+					ofDrawBitmapString("State Change to:" + ofToString(gameState), -50, 50);
+				}
+				if(gameState==2 && runtime)
+				{
+					it = 100;
+					ofSetColor(255,0,0);
+					glScalef(2,2,0);
+					ofDrawBitmapString("Set Card Done!!", -50, -50);
+					ofDrawBitmapString("State Change to:" + ofToString(gameState), -50, 50);
+				}
+				if(gameState==3 && runtime)
+				{
+					it = 100;
+					ofSetColor(255,0,0);
+					glScalef(2,2,0);
+					//ofDrawBitmapString("Set Card Done!!", -50, -50);
+					ofDrawBitmapString("State Change to:" + ofToString(gameState), -50, 50);
+				}
+				if(gameState==4 && runtime)
+				{
+					it = 100;
+					ofSetColor(255,0,0);
+					glScalef(2,2,0);
+					//ofDrawBitmapString("Set Card Done!!", -50, -50);
+					ofDrawBitmapString("State Change to:" + ofToString(gameState), -50, 50);
+				}
+				if(gameState==5 && runtime)
+				{
+					it = 100;
+					ofSetColor(255,0,0);
+					glScalef(2,2,0);
+					//ofDrawBitmapString("Set Card Done!!", -50, -50);
+					ofDrawBitmapString("State Change to:" + ofToString(gameState), -50, 50);
+				}
+				if(gameState==6 && runtime)
+				{
+					it = 100;
+					ofSetColor(255,0,0);
+					glScalef(2,2,0);
+					//ofDrawBitmapString("Set Card Done!!", -50, -50);
+					ofDrawBitmapString("State Change to:" + ofToString(gameState), -50, 50);
+				}
+			glPopMatrix();	
 		glPopMatrix();		
 	}
-	else if(markerID==markerIDArray[1])
-	{
+	else if(markerID==mIDcBack)// check if is card backing
+	{	
 		glPushMatrix();	
 			ofSetLineWidth(5);
 			ofNoFill();
 			ofSetColor(255, 255, 255);
 			//glTranslatef(0,0,50);
-			cardBackImage.draw(-25,-25,50,50);
-			ofSetColor(255, 0, 0);
-			glPushMatrix();
-				glScalef(0.5,0.5,0.5);
-				glTranslatef(-40,10,0);
-				glRotatef(180 ,1 ,0 ,0 );
-				ofDrawBitmapString("Card No.1\nCard Back",0 , 0);
-			glPopMatrix();
+			cardBackImage.draw(-25,-25,50,50); // draw card backing image
 		glPopMatrix();
 	}	
-	else if(markerID==markerIDArray[2])
+	//else if(markerID==mID[2])
+	//{
+	//	glPushMatrix();
+	//		ofSetLineWidth(5);
+	//		ofNoFill();
+	//		ofSetColor(255, 0, 0);
+	//		glScalef(0.5,0.5,0.5);
+	//		glTranslatef(-40,10,0);
+	//		glRotatef(180 ,1 ,0 ,0 );
+	//		ofDrawBitmapString("Card No.2",0 , 0);
+	//	glPopMatrix();
+	//}
+	
+	else if(markerID==mID[3])
 	{
 		glPushMatrix();
 			ofSetLineWidth(5);
@@ -469,87 +839,82 @@ void testApp::drawAR(int markerID){
 			glScalef(0.5,0.5,0.5);
 			glTranslatef(-40,10,0);
 			glRotatef(180 ,1 ,0 ,0 );
-			ofDrawBitmapString("Card No.2",0 , 0);
+			ofDrawBitmapString("Card No."+ofToString(markerID),0 , 0);
 		glPopMatrix();
 	}
-	/*
-	else if(markerID==markerIDArray[3])
+	else if(markerID==mID[4])
+	{
+		glPushMatrix();
+			ofSetLineWidth(5);
+			ofNoFill();
+			ofSetColor(255, 0, 0);
+			glScalef(0.5,0.5,0.5);
+			glTranslatef(-40,10,0);
+			glRotatef(180 ,1 ,0 ,0 );
+			ofDrawBitmapString("Card No."+ofToString(markerID),0 , 0);
+		glPopMatrix();
+	}/*
+	else if(markerID==mID[5])
 	{
 		
 	}
-	else if(markerID==markerIDArray[4])
+	else if(markerID==mID[6])
 	{
 		
 	}
-	else if(markerID==markerIDArray[5])
+	else if(markerID==mID[7])
 	{
 		
 	}
-	else if(markerID==markerIDArray[6])
+	else if(markerID==mID[8])
 	{
 		
 	}
-	else if(markerID==markerIDArray[7])
-	{
-		
-	}
-	else if(markerID==markerIDArray[8])
-	{
-		
-	}
-	else if(markerID==markerIDArray[9])
+	else if(markerID==mID[9])
 	{
 		
 	}
 	*/
 
-	// draw marker's matrix
+	// draw marker's vector of translation
 	glPushMatrix();
-		ofSetLineWidth(4);
+		ofSetLineWidth(5);
 		ofNoFill();
-		ofSetColor(100, 100, 100);
-		glScalef(0.4,0.4,0.4);
+		ofSetColor(255, 100, 100);
+		glScalef(0.5,0.5,0.5);
 		glTranslatef(-20,0,0);
 		glRotatef(180 ,1 ,0 ,0 );
-		ofDrawBitmapString(ofToString(matrixTrans[markerID][0]) + "\n" + ofToString(matrixTrans[markerID][1]) + "\n" + ofToString(matrixTrans[markerID][2]),0 , 0);
+		ofDrawBitmapString("Card No:"+ofToString(markerID)+"\nDetected :"+ofToString(mrIndex),-20 , -30);
+		/*ofDrawBitmapString(ofToString(mTrans[mrIndex][0]) + 
+		"\n" + ofToString(mTrans[mrIndex][1]) + 
+		"\n" + ofToString(mTrans[mrIndex][2]),-10 , 0);*/
 	glPopMatrix();
 }
-
 //--------------------------------------------------------------
-float testApp::calDistance(ofPoint p1,ofPoint p2){
-
-	return abs((p1.x-p2.x)*(p1.x-p2.x)+(p1.y-p2.y)*(p1.y-p2.y));
-}
-
-//--------------------------------------------------------------
-void testApp::updateCardFieldPosition(ofPoint mTrans){
-	cardFieldPos[0] = mTrans;
-	
-	cardFieldPos[2] = ofPoint(cardFieldPos[0].x-50,cardFieldPos[0].y,cardFieldPos[0].z);
-	cardFieldPos[1] = ofPoint(cardFieldPos[0].x-50,cardFieldPos[0].y-50,cardFieldPos[0].z);
-	cardFieldPos[3] = ofPoint(cardFieldPos[0].x-50,cardFieldPos[0].y+50,cardFieldPos[0].z);
-
-	cardFieldPos[5] = ofPoint(cardFieldPos[0].x+50,cardFieldPos[0].y,cardFieldPos[0].z);
-	cardFieldPos[4] = ofPoint(cardFieldPos[0].x+50,cardFieldPos[0].y-50,cardFieldPos[0].z);
-	cardFieldPos[6] = ofPoint(cardFieldPos[0].x+50,cardFieldPos[0].y+50,cardFieldPos[0].z);
-}
-
-//--------------------------------------------------------------
-int testApp::findNearestFieldAndMaker(ofPoint pMarker){
-
-	float nearest1 = 9999999;
-	float nearest2 = 0;
-	int index = 0;
-
-	for(int i=0;i<7;i++)
+int testApp::findIndex (vector<int> series, int v)
+{
+	for (int i=0; i<series.size(); i++)
 	{
-		nearest2 = calDistance(cardFieldPos[i],pMarker);
-		if(nearest2<nearest1)
+		if (series[i] == (v))
 		{
-			nearest1 = nearest2;
-			index = i;
+			return(i);  /* it was found */
 		}
 	}
-
-	return index;
+	return(-1);  /* if it was not found */
 }
+
+////--------------------------------------------------------------
+//float testApp::calDistance(ofPoint p1,ofPoint p2){
+//
+//	return abs((p1.x-p2.x)*(p1.x-p2.x)+(p1.y-p2.y)*(p1.y-p2.y));
+//}
+
+////--------------------------------------------------------------
+//int testApp::findIndexArray (int arr[], int v)
+//{
+//	for (int i=0; i<(sizeof(arr)/sizeof(*arr)); i++)
+//	{
+//		if(arr[i] == v) return(i);
+//	}
+//	return(-1);
+//}

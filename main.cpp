@@ -1,13 +1,12 @@
 #include "ofMain.h"
 #include "testApp.h"
-#include "showAllMarker.h"
+//#include "showAllMarker.h"
 #include "ofAppGlutWindow.h"
-#include <iostream>
 
 //========================================================================
 int main( ){
 
-    ofAppGlutWindow window;
+	ofAppGlutWindow window;
 	// can be OF_WINDOW or OF_FULLSCREEN
 	ofSetupOpenGL(&window, 800, 600, OF_WINDOW);			// <-------- setup the GL context
 	ofRunApp( new testApp());
@@ -20,11 +19,12 @@ int main( ){
 	//cin>>menu;
 
 	//if(menu=='1')
-	//{ofRunApp( new testApp());}
+	//{ofRunApp( new testApp55());}
 	//else
 	//{ofRunApp( new showAllMarker());}
 
 	
-	//ofRunApp( new testApp());
+	//{ofRunApp( new testApp());}
+
 
 }
