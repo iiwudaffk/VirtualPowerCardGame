@@ -87,10 +87,11 @@ public:
 	* 1 = found field marker ,wait: p1 set character back card && p2 set character back card => 2
 	* 2 = set character back card done ,wait: p1 flip card to front  && p2 flip card to front => 3
 
-	* 3 = set character card done ,wait: pATK set front attack card && pDEF set back support card => 4
-	* 4 = set back support card done ,wait: pDEF flip card to front => 5
-	* 5 = fighting turn and calculate damage ,wait: time delay if any pHP !=0 => 3 else => 6
-	* 6 = got winner and game end
+	* 3 = set character card done ,wait: pATK set back attack card && pDEF set back support card => 4
+	* 4 = set back support card done ,wait: pATK and pDEF flip card to front => 5
+	* 5 = fighting turn and calculate damage ,wait: time delay => 6
+	* 6 = show effect and calculate player hp ,wait: if any pHP !=0 => 3 else => 7
+	* 7 = got winner and game end
 	*/
 	
 	// create field

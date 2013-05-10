@@ -12,11 +12,11 @@ void testApp::setup(){
 	mIDcAtkFront = 9;
 
 	gameState = 0; // ready to game start
-	PL.calculateHP(-500); // set HP
-	PR.calculateHP(-500); // set HP
+	//PL.calculateHP(-500); // set HP
+	//PR.calculateHP(-500); // set HP
 
-	PL.setTurn(1); // first play
-	PR.setTurn(0); // second play
+	//PL.setTurn(1); // first play
+	//PR.setTurn(0); // second play
 	
 	// setup all character cards
 	c1.setCName("Dark Magician");
@@ -256,16 +256,26 @@ void testApp::draw(){
 	ofDrawBitmapString("Field 6 : " + ofToString(f1.getMarkerIDsetted(6)), 10, 200);
 	ofDrawBitmapString("Field 7 : " + ofToString(f1.getMarkerIDsetted(7)), 10, 220);
 	ofDrawBitmapString("Field 8 : " + ofToString(f1.getMarkerIDsetted(8)), 10, 240);
+	ofDrawBitmapString("Wait Time : " + ofToString(wt), 10, 260);
+	ofDrawBitmapString("input Time : " + ofToString(it), 10, 280);
+	ofDrawBitmapString("Run Time : " + ofToString(runtime), 10, 300);
 
-	ofDrawBitmapString("P1 HP : " + ofToString(PL.hp()), 10, 260);
-	ofDrawBitmapString("P1 Life : " + ofToString(PL.isAlive()), 10, 280);
-	ofDrawBitmapString("P2 HP : " + ofToString(PR.hp()), 10, 300);
-	ofDrawBitmapString("P2 Life : " + ofToString(PR.isAlive()), 10, 320);
-	ofDrawBitmapString("Wait Time : " + ofToString(wt), 10, 360);
-	ofDrawBitmapString("input Time : " + ofToString(it), 10, 380);
-	ofDrawBitmapString("Run Time : " + ofToString(runtime), 10, 400);
-	ofDrawBitmapString("P1 Life : " + ofToString(PL.isTurn()), 10, 420);
-	ofDrawBitmapString("P2 Life : " + ofToString(PR.isTurn()), 10, 440);
+	ofDrawBitmapString("P1 HP : " + ofToString(PL.hp()), 700, 20);
+	ofDrawBitmapString("P1 Life : " + ofToString(PL.isAlive()), 700, 40);
+	ofDrawBitmapString("P1 Turn : " + ofToString(PL.isTurn()), 700, 60);
+
+	ofDrawBitmapString("P2 HP : " + ofToString(PR.hp()), 700, 100);
+	ofDrawBitmapString("P2 Life : " + ofToString(PR.isAlive()), 700, 120);
+	ofDrawBitmapString("P2 Turn : " + ofToString(PR.isTurn()), 700, 140);
+
+	ofSetLineWidth(5);
+	ofNoFill();	
+	ofSetColor(255, 0, 0);
+	ofRect(50, 50, 50, 50);
+
+
+	
+	
 	
 	//ofFill();
 	//ofEnableAlphaBlending();    // turn on alpha blending
@@ -425,9 +435,10 @@ void testApp::draw(){
 		}
 	}
 	// set character card done ,
-	// wait: pATK set front attack card && pDEF set back support card => 4
+	// wait: pATK set back attack card && pDEF set back support card => 4
 	else if(gameState==3)
 	{
+		CalDmg.~CalculateDmg(); // clear all damage
 		mID.clear();
 		mTrans.clear();
 		for(int i=0; i<numDetected; i++)
@@ -442,53 +453,42 @@ void testApp::draw(){
 			if(mID[i]==mIDcField){f1.updateCardFieldPosition(mTrans[i]);}; // update position of field card
 			drawAR(mID[i],i); // draw object on marker
 			
-			// check attack player
-			if(mID[i]==mIDcAtkFront)
+			if(mID[i]==mIDscBack)
 			{
 				nearField = f1.findNearestFieldAndMaker(mTrans[i]);
-				// if distance<100 set card to field
-				if((nearField==1 && calDistance(f1.getfPos(nearField),mTrans[i])<100))
+				
+				// if p1 attack and p2 defend
+				if(((nearField==1 || nearField==4) && calDistance(f1.getfPos(nearField),mTrans[i])<100))
 				{
+					f1.setFMisEmpty(nearField); // clear field 1 to set atk card
+					f1.setFMisEmpty(3); // clear field 3 cause not be defender
+					f1.setFMisEmpty(6); // clear field 6 cause not be attack
 					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
-					if(f1.getMarkerIDsetted(1)==mIDcAtkFront){PL.setTurn(1);PR.setTurn(0);} // set play turn
-					
+					if(f1.getMarkerIDsetted(nearField)==mIDscBack){PL.setTurn(1);PR.setTurn(0);} // set play turn
 				}
-				else if(nearField==6 && calDistance(f1.getfPos(nearField),mTrans[i])<100)
+				// if p2 attack and p1 defend
+				else if((nearField==3 || nearField==6) && calDistance(f1.getfPos(nearField),mTrans[i])<100)
 				{
+					f1.setFMisEmpty(nearField); // clear field 6 to set atk card
+					f1.setFMisEmpty(4); // clear field 4 cause not be defender
+					f1.setFMisEmpty(1); // clear field 1 cause not be attack
 					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
-					if(f1.getMarkerIDsetted(6)==mIDcAtkFront){PR.setTurn(1);PL.setTurn(0);} // set play turn
+					if(f1.getMarkerIDsetted(nearField)==mIDscBack){PL.setTurn(0);PR.setTurn(1);} // set play turn
 				}
-			}
-
-			// check defence player
-			if(mID[i]==mIDscBack)
-			{	
-				nearField = f1.findNearestFieldAndMaker(mTrans[i]);
-				if((nearField==3 && calDistance(f1.getfPos(nearField),mTrans[i])<100))
-				{
-					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
-					if(f1.getMarkerIDsetted(3)==mIDscBack){PL.setTurn(0);PR.setTurn(1);} // set play turn
-					
-				}
-				else if(nearField==4 && calDistance(f1.getfPos(nearField),mTrans[i])<100)
-				{
-					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
-					if(f1.getMarkerIDsetted(4)==mIDscBack){PR.setTurn(1);PL.setTurn(0);} // set play turn
-				}
-			}
-			
+			}			
 		}
+
 		// check player turn
-			if((PL.isTurn() && f1.getMarkerIDsetted(1)==mIDcAtkFront && f1.getMarkerIDsetted(4)==mIDscBack) ||
-				(PR.isTurn() && f1.getMarkerIDsetted(6)==mIDcAtkFront && f1.getMarkerIDsetted(3)==mIDscBack))
-			{	
-				gameState = 4; // change game state
-				cout<<"Change gameState = 4 : All player ready to fight"<<endl;
-				runtime = true;
-			}
+		if((PL.isTurn() && f1.getMarkerIDsetted(1)==mIDscBack && f1.getMarkerIDsetted(4)==mIDscBack) ||
+			(PR.isTurn() && f1.getMarkerIDsetted(6)==mIDscBack && f1.getMarkerIDsetted(3)==mIDscBack))
+		{	
+			gameState = 4; // change game state
+			cout<<"Change gameState = 4 : All player ready to fight"<<endl;
+			runtime = true;
+		}
 	}
 	// set back support card done ,
-	// wait: pDEF flip card to front => 5
+	// wait: pATK and pDEF flip card to front => 5
 	else if(gameState==4)
 	{
 		mID.clear();
@@ -520,10 +520,26 @@ void testApp::draw(){
 					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
 				}
 			}
+
+			// check mID is mIDcAtkFront
+			if(mID[i]==mIDcAtkFront)
+			{
+				nearField = f1.findNearestFieldAndMaker(mTrans[i]);
+				if(PL.isTurn() && nearField==1 && calDistance(f1.getfPos(nearField),mTrans[i])<100)
+				{
+					f1.setFMisEmpty(nearField); // clear slot for set new card
+					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
+				}
+				else if(PR.isTurn() && nearField==6 && calDistance(f1.getfPos(nearField),mTrans[i])<100)
+				{
+					f1.setFMisEmpty(nearField); // clear slot for set new card
+					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
+				}
+			}
 		}
 		// 
-		if((PL.isTurn() && findIndex(mIDscFront,f1.getMarkerIDsetted(4))!=-1) || 
-			(PR.isTurn() && findIndex(mIDscFront,f1.getMarkerIDsetted(3))!=-1))
+		if((PL.isTurn() && findIndex(mIDscFront,f1.getMarkerIDsetted(4))!=-1) && f1.getMarkerIDsetted(6)==mIDcAtkFront || 
+			(PR.isTurn() && findIndex(mIDscFront,f1.getMarkerIDsetted(3))!=-1) && f1.getMarkerIDsetted(1)==mIDcAtkFront)
 		{	
 			gameState = 5; // change game state
 			cout<<"Change gameState = 5 : All player flip card done"<<endl;
@@ -531,7 +547,7 @@ void testApp::draw(){
 		}
 	}
 	// fighting turn and calculate damage ,
-	// wait: time delay if any pHP !=0 => 3 else => 6 
+	// wait: time delay  => 6 
 	else if(gameState==5)
 	{
 		mID.clear();
@@ -543,82 +559,128 @@ void testApp::draw(){
 			// get [Marker Translation] from current [MakerIndex[i]]
 			mTrans.push_back(artk.getTranslation(i));
 		}
+
+
 		if(PL.isTurn())
-				{
-					int ia=f1.getMarkerIDsetted(2); // id of atk character front card as set in field slot
-					int id=f1.getMarkerIDsetted(5); // id of def character front card as set in field slot
-					int idt=f1.getMarkerIDsetted(4); // id of type defence front card as set in field slot
-					int ica=0; // marker id of attack character
-					int icd=0; // marker id of defence character
-		
-					for(int j=0;j<clist.size();j++)
-					{
-						if(ia == clist[j].cmIdFront())
-						{	ica = j;	}
-					}
-					int atk = floor((clist[ica].atk() * clist[ica].atkRate())+0.5); // get total attack
-				
-					for(int j=0;j<clist.size();j++)
-					{
-						if(id == clist[j].cmIdFront())
-						{	icd = j;	}
-					}
-					int def = clist[icd].def(); //get defence
+		{
+			int ia=f1.getMarkerIDsetted(2); // id of atk character front card as set in field slot
+			int id=f1.getMarkerIDsetted(5); // id of def character front card as set in field slot
+			int idt=f1.getMarkerIDsetted(4); // id of type defence front card as set in field slot
+			int ica=0; // marker id of attack character
+			int icd=0; // marker id of defence character
+			int icdt=0; // marker id of defence type
 
-				
-					CalDmg.cTdef(idt,atk,def);
-					PL.calculateHP(CalDmg.paDmg());
-					PR.calculateHP(CalDmg.pdDmg());
-				}
-				else if(PR.isTurn())
-				{
-					int ia=f1.getMarkerIDsetted(5); // id of atk character front card as set in field slot
-					int id=f1.getMarkerIDsetted(2); // id of def character front card as set in field slot
-					int idt=f1.getMarkerIDsetted(3); // id of type defence front card as set in field slot
-					int ica=0; // marker id of attack character
-					int icd=0; // marker id of defence character
-		
-					for(int j=0;j<clist.size();j++)
-					{
-						if(ia == clist[j].cmIdFront())
-						{	ica = j;	}
-					}
-					//int atk = floor((clist[ica].atk() * clist[ica].atkRate())+0.5); // get total attack
-					int atk = clist[ica].atk();
-				
-					for(int j=0;j<clist.size();j++)
-					{
-						if(id == clist[j].cmIdFront())
-						{	icd = j;	}
-					}
-					int def = clist[icd].def(); //get defence
+			for(int j=0;j<clist.size();j++)
+			{
+				if(ia == clist[j].cmIdFront())
+				{	ica = j;	}
+			}
+			int atk = floor((clist[ica].atk() * clist[ica].atkRate())+0.5); // get total attack
+			int atk2 = clist[ica].atk();
 
-					CalDmg.cTdef(idt,atk,def);
-					PR.calculateHP(CalDmg.paDmg());
-					PL.calculateHP(CalDmg.pdDmg());
-					cout<<clist[ica].atkRate()<<"p1 atk: "<<atk<<endl;
-					cout<<"p1 atk: "<<atk<<endl;
-					cout<<"p2 def: "<<def<<endl;
-					cout<<"p1 dmg: "<<CalDmg.paDmg()<<endl;
-					cout<<"p2 dmg: "<<CalDmg.pdDmg()<<endl;
-				}
-		
-		
+			for(int j=0;j<clist.size();j++)
+			{
+				if(id == clist[j].cmIdFront())
+				{	icd = j;	}
+			}
+			int def = clist[icd].def(); //get defence
+
+			for(int j=0;j<sclist.size();j++)
+			{
+				if(idt == sclist[j].cmIdFront())
+				{	icdt = j;	}
+			}
+
+
+			CalDmg.cTdef(idt,atk2,def);
+			PL.calculateHP(CalDmg.paDmg());
+			PR.calculateHP(CalDmg.pdDmg());
+			cout<<"=========== PL turn ==========="<<icdt<<endl;
+			cout<<clist[ica].Cname()<<" is Attacker"<<", has attack power ["<<atk2<<"]"<<endl;
+			cout<<clist[icd].Cname()<<" is Defender"<<", has defence power ["<<def<<"]"<<endl;
+			cout<<clist[icd].Cname()<<" is Defender"<<", has ["<<sclist[icdt].Cname()<<"]"<<endl;
+			//cout<<"p1 atk rate "<<clist[ica].atkRate()<<" : "<<atk<<endl;
+			cout<<"Attacker got damage: "<<CalDmg.paDmg()<<endl;
+			cout<<"Defender got damage: "<<CalDmg.pdDmg()<<endl;
+		}
+		else if(PR.isTurn())
+		{
+			int ia=f1.getMarkerIDsetted(5); // id of atk character front card as set in field slot
+			int id=f1.getMarkerIDsetted(2); // id of def character front card as set in field slot
+			int idt=f1.getMarkerIDsetted(3); // id of type defence front card as set in field slot
+			int ica=0; // marker id of attack character
+			int icd=0; // marker id of defence character
+			int icdt=0; // marker id of defence type
+
+			for(int j=0;j<clist.size();j++)
+			{
+				if(ia == clist[j].cmIdFront())
+				{	ica = j;	}
+			}
+			int atk = floor((clist[ica].atk() * clist[ica].atkRate())+0.5); // get total attack
+			int atk2 = clist[ica].atk();
+
+			for(int j=0;j<clist.size();j++)
+			{
+				if(id == clist[j].cmIdFront())
+				{	icd = j;	}
+			}
+			int def = clist[icd].def(); //get defence
+			
+			for(int j=0;j<sclist.size();j++)
+			{
+				if(idt == sclist[j].cmIdFront())
+				{	icdt = j;	}
+			}
+
+			CalDmg.cTdef(idt,atk2,def);
+			PR.calculateHP(CalDmg.paDmg());
+			PL.calculateHP(CalDmg.pdDmg());
+			cout<<"=========== PR turn ==========="<<icdt<<endl;
+			cout<<clist[ica].Cname()<<" is Attacker"<<", has attack power ["<<atk2<<"]"<<endl;
+			cout<<clist[icd].Cname()<<" is Defender"<<", has defence power ["<<def<<"]"<<endl;
+			cout<<clist[icd].Cname()<<" is Defender"<<", has ["<<sclist[icdt].Cname()<<"]"<<endl;
+			//cout<<"p1 atk rate "<<clist[ica].atkRate()<<" : "<<atk<<endl;
+			cout<<"Attacker got damage: "<<CalDmg.paDmg()<<endl;
+			cout<<"Defender got damage: "<<CalDmg.pdDmg()<<endl;
+		}
+
+
+		for(int i=0; i<mID.size(); i++)
+		{
+			if(mID[i]==mIDcField){f1.updateCardFieldPosition(mTrans[i]);}; // update position of field card
+			drawAR(mID[i],i); // draw object on marker
+
+			if(PL.isAlive() && PR.isAlive())
+			{	gameState = 3;	f1.setFMisEmpty(1);	f1.setFMisEmpty(3);	f1.setFMisEmpty(4);	f1.setFMisEmpty(6);}
+			else
+			{	gameState = 7;	}
+		}
+	}
+	// show effect and calculate player hp ,
+	// wait: if any pHP !=0 => 3 else => 7
+	else if(gameState==6)
+	{
+		mID.clear();
+		mTrans.clear();
+		for(int i=0; i<numDetected; i++)
+		{
+			// get [MarkerID] from current [MakerIndex[i]] for identify each Maker
+			mID.push_back(artk.getMarkerID(i));
+			// get [Marker Translation] from current [MakerIndex[i]]
+			mTrans.push_back(artk.getTranslation(i));
+		}
+
 		for(int i=0; i<mID.size(); i++)
 		{
 			if(mID[i]==mIDcField){f1.updateCardFieldPosition(mTrans[i]);}; // update position of field card
 			drawAR(mID[i],i); // draw object on marker
 			
-				
-				if(PL.isAlive() && PR.isAlive())
-		{	gameState = 3;	f1.setFMisEmpty(1);	f1.setFMisEmpty(3);	f1.setFMisEmpty(4);	f1.setFMisEmpty(6);}
-		else
-		{	gameState = 6;	}
-			
+
 		}
 	}
-	// 6 = got winner and game end
-	else if(gameState==6)
+	// got winner and game end
+	else if(gameState==7)
 	{
 		mID.clear();
 		mTrans.clear();
@@ -635,7 +697,6 @@ void testApp::draw(){
 			drawAR(mID[i],i); // draw object on marker
 		}
 	}
-	
 
 
 	//glDisable (GL_DEPTH_TEST);
@@ -733,19 +794,21 @@ void testApp::drawAR(int markerID,int mrIndex,string mname){
 			ofSetColor(255,0,255,127);    // pink, 50% transparent
 			ofRect(-75, -75, 150, 150);
 
-			ofSetColor(255, 0, 0, 127);
-			ofRect(25, -75, 50, 50);
-			ofSetColor(0, 255, 0, 127);
-			ofRect(25, -25, 50, 50);
 			ofSetColor(0, 0, 255, 127);
-			ofRect(25, 25, 50, 50);
-			
-			ofSetColor(255, 0, 0, 127);
-			ofRect(-75, -75, 50, 50);
+			ofRect(25, -75, 50, 50); // field 4
 			ofSetColor(0, 255, 0, 127);
-			ofRect(-75, -25, 50, 50);
-			ofSetColor(0, 0, 255, 127);
-			ofRect(-75, 25, 50, 50);
+			ofRect(25, -25, 50, 50); // field 5
+			ofSetColor(255, 0, 0, 127);
+			ofRect(25, 25, 50, 50); // field 6
+			ofSetColor(255, 0, 0, 127);
+			ofRect(-75, -75, 50, 50); // field 6
+
+			//ofSetColor(255, 0, 0, 127);
+			//ofRect(-75, -75, 50, 50); // field 1
+			//ofSetColor(0, 255, 0, 127);
+			//ofRect(-75, -25, 50, 50); // field 2
+			//ofSetColor(0, 0, 255, 127);
+			//ofRect(-75, 25, 50, 50); // field 3
 			ofDisableAlphaBlending();   // turn off alpha
 
 			ofSetColor(255, 255, 255);

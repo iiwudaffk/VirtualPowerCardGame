@@ -64,7 +64,8 @@ CalculateDmg::CalculateDmg(int p1dmg,int p2dmg){
 }
 
 CalculateDmg::~CalculateDmg(){
-	CalculateDmg(0,0);
+	setPAtkDmg(0);
+	setPDefDmg(0);
 }
 
 void CalculateDmg::setPAtkDmg(int dmg){
