@@ -152,6 +152,10 @@ public:
 	int it;
 	bool runtime;
 
+	// scale for all marker graphic
+	float mw;
+	float mh;
+
 	// use true type font
 	ofTrueTypeFont myFont;
 

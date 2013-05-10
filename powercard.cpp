@@ -85,13 +85,13 @@ int CalculateDmg::pdDmg(){
 }
 
 void CalculateDmg::cTdef(int num,int p1atk,int p2def){
-	if(num==11){defMiss(p1atk);}
+	if(num==11){defFail(p1atk);}
 	if(num==12){defValue(p1atk,p2def);}
 	if(num==13){defATKMiss();}
 	if(num==14){defReturn(p1atk);}
 }
 
-void CalculateDmg::defMiss(int atk){
+void CalculateDmg::defFail(int atk){
 	this->setPAtkDmg(0);
 	this->setPDefDmg(atk);
 }
@@ -120,60 +120,133 @@ void CalculateDmg::defReturn(int p1atk){
 // Class Field
 ////////////////////////////////////////////
 Field::Field(){
-	this->clearAll();
-}
-
-//Field::Field(int initMarkerID){
-//	Field::Field(initMarkerID,ofPoint(0,0,0));
-//}
-
-Field::Field(int initMarkerID,ofPoint markerTransInitMarkerID){
-	field[0].fSetByMarkerID = initMarkerID;
+	fMarkerID[0] = 0;
 	for(int i=1;i<9;i++)
 	{
-		field[i].fSetByMarkerID = (-1);
+		fMarkerID[i] = -1;
 	}
-	Field::updateCardFieldPosition(markerTransInitMarkerID);
+	fw = 50.0;
+	fh = 50.0;
+	updateCardFieldPosition(ofPoint(-1,-1,-1));
+}
+
+Field::Field(int initMarkerID){
+	fMarkerID[0] = initMarkerID;
+	for(int i=1;i<9;i++)
+	{
+		fMarkerID[i] = -1;
+	}
+	fw = 50.0;
+	fh = 50.0;
+	updateCardFieldPosition(ofPoint(-1,-1,-1));
+}
+
+Field::Field(int initMarkerID,ofPoint markerTransInitMarkerID){
+	fMarkerID[0] = initMarkerID;
+	for(int i=1;i<9;i++)
+	{
+		fMarkerID[i] = -1;
+	}
+	fw = 50.0;
+	fh = 50.0;
+	updateCardFieldPosition(markerTransInitMarkerID);
+}
+
+Field::Field(int initMarkerID,ofPoint markerTransInitMarkerID,float w,float h){
+	//field[0].fSetByMarkerID = initMarkerID;
+	//for(int i=1;i<9;i++)
+	//{
+	//	field[i].fSetByMarkerID = (-1);
+	//}
+	//Field::updateCardFieldPosition(markerTransInitMarkerID);
+
+	fMarkerID[0] = initMarkerID;
+	for(int i=1;i<9;i++)
+	{
+		fMarkerID[i] = -1;
+	}
+	fw = w;
+	fh = h;
+	updateCardFieldPosition(markerTransInitMarkerID);
 }
 
 Field::~Field(){
 	
+	//for(int i=0;i<9;i++)
+	//{
+	//	field[i].fPos = ofPoint(-1,-1,-1);
+	//	field[i].fSetByMarkerID = -1;
+	//}
 	for(int i=0;i<9;i++)
 	{
-		field[i].fPos = ofPoint(-1,-1,-1);
-		field[i].fSetByMarkerID = -1;
+		fSlot[i].setFromCenter(ofPoint(0,0,0),50,50);
+		fMarkerID[i] = -1;
 	}
-};
+}
+
+
+float Field::getFw(){
+	return this->fw;
+}
+
+float Field::getFh(){
+	return this->fh;
+}
+
+ofRectangle Field::getfSlot(int fNo){
+	return this->fSlot[fNo];
+}
 
 ofPoint Field::getfPos(int fNo){
-	return this->field[fNo].fPos;
+	//return this->field[fNo].fPos;
+	return this->fSlot[fNo].getCenter();
 }
 
 int Field::getMarkerIDsetted(int fNo){
-	return this->field[fNo].fSetByMarkerID;
+	//return this->field[fNo].fSetByMarkerID;
+	return this->fMarkerID[fNo];
 }
 
 bool Field::isEmpty(int fNo){
-	return (field[fNo].fSetByMarkerID == -1)? true:false;
+	//return (field[fNo].fSetByMarkerID == -1)? true:false;
+	return (fMarkerID[fNo] == -1)? true:false;
+}
+
+void Field::setWH(float w,float h){
+	this->fw = w;
+	this->fh = h;
 }
 
 int Field::setFieldByMarkerID(int fNo,int mID){
+	//if(isEmpty(fNo))
+	//{
+	//	field[fNo].fSetByMarkerID = mID;
+	//	//cout<<"set card "<<mID<<", to Field "<<fNo<<" done"<<endl;
+	//	return -1;
+	//}
+	//else
+	//{
+	//	//cout<<"cannot set card "<<mID<<", to Field "<<fNo<<endl;
+	//	return field[fNo].fSetByMarkerID;
+	//}
 	if(isEmpty(fNo))
 	{
-		field[fNo].fSetByMarkerID = mID;
+		fMarkerID[fNo] = mID;
 		//cout<<"set card "<<mID<<", to Field "<<fNo<<" done"<<endl;
 		return -1;
 	}
 	else
 	{
 		//cout<<"cannot set card "<<mID<<", to Field "<<fNo<<endl;
-		return field[fNo].fSetByMarkerID;
+		return fMarkerID[fNo];
 	}
 }
 
 void Field::setFMisEmpty(int fNo){
+	//if(!isEmpty(fNo)) 
+	//{field[fNo].fSetByMarkerID=-1;}
 	if(!isEmpty(fNo)) 
-	{field[fNo].fSetByMarkerID=-1;}
+	{fMarkerID[fNo]=-1;}
 }
 
 void Field::clearAll(){
@@ -181,18 +254,27 @@ void Field::clearAll(){
 }
 
 void Field::updateCardFieldPosition(ofPoint markerTrans){
-	this->field[0].fPos = markerTrans;
+	/*
+	|=====|=====|=====|
+	|  1  |  7  |  4  |
+	|=====|=====|=====|
+	|  2  |  0  |  5  |
+	|=====|=====|=====|
+	|  3  |  8  |  6  |
+	|=====|=====|=====|
+	*/
+	fSlot[0].setFromCenter(markerTrans,fw,fh);
 
-	this->field[1].fPos = ofPoint(markerTrans.x-50,markerTrans.y-50,markerTrans.z);
-	this->field[2].fPos = ofPoint(markerTrans.x-50,markerTrans.y,markerTrans.z);
-	this->field[3].fPos = ofPoint(markerTrans.x-50,markerTrans.y+50,markerTrans.z);
+	fSlot[1].setFromCenter(ofPoint(fSlot[0].getCenter().x-fw,fSlot[0].getCenter().y-fh,fSlot[0].getCenter().z),fw,fh);
+	fSlot[2].setFromCenter(ofPoint(fSlot[0].getCenter().x-fw,fSlot[0].getCenter().y,fSlot[0].getCenter().z),fw,fh);
+	fSlot[3].setFromCenter(ofPoint(fSlot[0].getCenter().x-fw,fSlot[0].getCenter().y+fh,fSlot[0].getCenter().z),fw,fh);
 
-	this->field[4].fPos = ofPoint(markerTrans.x+50,markerTrans.y-50,markerTrans.z);
-	this->field[5].fPos = ofPoint(markerTrans.x+50,markerTrans.y,markerTrans.z);
-	this->field[6].fPos = ofPoint(markerTrans.x+50,markerTrans.y+50,markerTrans.z);
+	fSlot[4].setFromCenter(ofPoint(fSlot[0].getCenter().x+fw,fSlot[0].getCenter().y-fh,fSlot[0].getCenter().z),fw,fh);
+	fSlot[5].setFromCenter(ofPoint(fSlot[0].getCenter().x+fw,fSlot[0].getCenter().y,fSlot[0].getCenter().z),fw,fh);
+	fSlot[6].setFromCenter(ofPoint(fSlot[0].getCenter().x+fw,fSlot[0].getCenter().y+fh,fSlot[0].getCenter().z),fw,fh);
 
-	this->field[7].fPos = ofPoint(markerTrans.x,markerTrans.y-50,markerTrans.z);
-	this->field[8].fPos = ofPoint(markerTrans.x,markerTrans.y+50,markerTrans.z);
+	fSlot[7].setFromCenter(ofPoint(fSlot[0].getCenter().x,fSlot[0].getCenter().y-fh,fSlot[0].getCenter().z),fw,fh);
+	fSlot[8].setFromCenter(ofPoint(fSlot[0].getCenter().x,fSlot[0].getCenter().y+fh,fSlot[0].getCenter().z),fw,fh);
 }
 
 int Field::findNearestFieldAndMaker(ofPoint pMarker){
@@ -202,7 +284,8 @@ int Field::findNearestFieldAndMaker(ofPoint pMarker){
 
 	for(int i=1;i<9;i++)
 	{
-		nearest2 = calDistance(this->field[i].fPos,pMarker);
+		//nearest2 = calDistance(this->field[i].fPos,pMarker);
+		nearest2 = calDistance(this->fSlot[i].getCenter(),pMarker);
 		//cout<<"near f["<<i<<"] : "<<nearest2<<endl;
 		if(nearest2<nearest1)
 		{
@@ -210,24 +293,40 @@ int Field::findNearestFieldAndMaker(ofPoint pMarker){
 			index = i;
 		}
 	}
-	
 	return index;
 }
 
 int Field::countIDMarker(int markerID){
+	//int c = 0;
+	//int s = sizeof(field)/sizeof(field[0]);
+	//cout<<"-------------------"<<endl;
+	//cout<<"sizeof(arr) : "<<sizeof(field)<<endl;
+	//cout<<"sizeof(*arr) : "<<sizeof(*field)<<endl;
+	//cout<<"sizeof(arr[0]) : "<<sizeof(field[0])<<endl;
+	//cout<<"sizeof(&arr) : "<<sizeof(&field)<<endl;
+	//cout<<"sizeof(arr) : "<<s<<endl;
+	//
+	//for (int i=0; i<(s); i++)
+	//{
+	//	if(field[i].fSetByMarkerID == markerID) c++;
+	//	cout<<"i : "<<i<<", ID : "<<field[i].fSetByMarkerID<<endl;
+	//}
+	//cout<<"-------------------"<<endl;
+	//return c;
+	
 	int c = 0;
-	int s = sizeof(field)/sizeof(field[0]);
+	int s = sizeof(fMarkerID)/sizeof(fMarkerID[0]);
 	cout<<"-------------------"<<endl;
-	cout<<"sizeof(arr) : "<<sizeof(field)<<endl;
-	cout<<"sizeof(*arr) : "<<sizeof(*field)<<endl;
-	cout<<"sizeof(arr[0]) : "<<sizeof(field[0])<<endl;
-	cout<<"sizeof(&arr) : "<<sizeof(&field)<<endl;
+	cout<<"sizeof(arr) : "<<sizeof(fMarkerID)<<endl;
+	cout<<"sizeof(*arr) : "<<sizeof(*fMarkerID)<<endl;
+	cout<<"sizeof(arr[0]) : "<<sizeof(fMarkerID[0])<<endl;
+	cout<<"sizeof(&arr) : "<<sizeof(&fMarkerID)<<endl;
 	cout<<"sizeof(arr) : "<<s<<endl;
 	
 	for (int i=0; i<(s); i++)
 	{
-		if(field[i].fSetByMarkerID == markerID) c++;
-		cout<<"i : "<<i<<", ID : "<<field[i].fSetByMarkerID<<endl;
+		if(fMarkerID[i] == markerID) c++;
+		cout<<"i : "<<i<<", ID : "<<fMarkerID[i]<<endl;
 	}
 	cout<<"-------------------"<<endl;
 	return c;
@@ -235,12 +334,32 @@ int Field::countIDMarker(int markerID){
 
 void Field::printMID(){
 
-	cout<<"---------fSetByMarkerID----------"<<endl;
+	cout<<"---------fMarkerID----------"<<endl;
 	for (int i=0; i<9; i++)
 	{
-		cout<<"i : "<<i<<", ID : "<<field[i].fSetByMarkerID<<endl;
+		//cout<<"i : "<<i<<", ID : "<<field[i].fSetByMarkerID<<endl;
+		cout<<"i : "<<i<<", ID : "<<fMarkerID[i]<<endl;
 	}
-	cout<<"---------fSetByMarkerID----------"<<endl;
+	cout<<"---------fMarkerID----------"<<endl;
+}
+
+void Field::drawField(){
+	ofSetColor(255, 0, 255, 127);
+	ofRect(ofPoint(0 - fw/2.0,0 - fh/2.0), fw, fh); // field 0
+
+	ofSetColor(0, 255, 0, 127);
+	ofRect(ofPoint((0-fw) - fw/2.0,0 - fh/2.0), fw, fh); // field 2
+	ofSetColor(255, 0, 0, 127);
+	ofRect(ofPoint((0-fw) - fw/2.0,(0+fw) - fh/2.0), fw, fh); // field 1
+	ofSetColor(0, 0, 255, 127);
+	ofRect(ofPoint((0-fw) - fw/2.0,(0-fw) - fh/2.0), fw, fh); // field 3
+
+	ofSetColor(0, 255, 0, 127);
+	ofRect(ofPoint((0+fw) - fw/2.0,0 - fh/2.0), fw, fh); // field 5
+	ofSetColor(0, 0, 255, 127);
+	ofRect(ofPoint((0+fw) - fw/2.0,(0+fw) - fh/2.0), fw, fh); // field 4
+	ofSetColor(255, 0, 0, 127);
+	ofRect(ofPoint((0+fw) - fw/2.0,(0-fw) - fh/2.0), fw, fh); // field 6	
 }
 ////////////////////////////////////////////
 

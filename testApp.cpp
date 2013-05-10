@@ -7,9 +7,9 @@ void testApp::setup(){
 	it = 999;
 	runtime = false;
 	mIDcField = 0;
-	mIDcBack = 1;
-	mIDscBack = 1;
+	mIDcBack = mIDscBack = 1;
 	mIDcAtkFront = 9;
+	mw = mh = 50.0;
 
 	gameState = 0; // ready to game start
 	//PL.calculateHP(-500); // set HP
@@ -268,10 +268,10 @@ void testApp::draw(){
 	ofDrawBitmapString("P2 Life : " + ofToString(PR.isAlive()), 700, 120);
 	ofDrawBitmapString("P2 Turn : " + ofToString(PR.isTurn()), 700, 140);
 
-	ofSetLineWidth(5);
-	ofNoFill();	
-	ofSetColor(255, 0, 0);
-	ofRect(50, 50, 50, 50);
+	//ofSetLineWidth(5);
+	//ofNoFill();	
+	//ofSetColor(255, 0, 0);
+	//ofRect(50, 50, 50, 50);
 
 
 	
@@ -367,18 +367,15 @@ void testApp::draw(){
 			// get [Marker Translation] from current [MakerIndex[i]]
 			mTrans.push_back(artk.getTranslation(i));
 		}
+
 		for(int i=0; i<mID.size(); i++)
 		{
-			if(mID[i]==mIDcField)
-			{
-				// update position of initial field card
-				f1.updateCardFieldPosition(mTrans[i]); 
-			}
+			if(mID[i]==mIDcField){f1.updateCardFieldPosition(mTrans[i]);}// update position of initial field card
+			nearField = f1.findNearestFieldAndMaker(mTrans[i]); // find near field and marker
 			drawAR(mID[i],i); // draw object on marker
 
 			if(mID[i]==mIDcBack)
 			{
-				nearField = f1.findNearestFieldAndMaker(mTrans[i]);
 				if((nearField==2 || nearField==5) && calDistance(f1.getfPos(nearField),mTrans[i])<100)
 				{
 					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
@@ -388,7 +385,7 @@ void testApp::draw(){
 			if(f1.getMarkerIDsetted(2)==mIDcBack && f1.getMarkerIDsetted(5)==mIDcBack)
 			{	
 				gameState = 2; // change game state
-				cout<<"Change gameState = 2 : All player set back card done"<<endl;
+				cout<<"Change gameState = 2 : All player set back character card done"<<endl;
 				runtime = true;
 			}
 		}
@@ -408,16 +405,13 @@ void testApp::draw(){
 		}
 		for(int i=0; i<mID.size(); i++)
 		{
-			if(mID[i]==mIDcField)
-			{
-				// update position of field card
-				f1.updateCardFieldPosition(mTrans[i]);
-			}; 
+			if(mID[i]==mIDcField){f1.updateCardFieldPosition(mTrans[i]);}// update position of field card
+			nearField = f1.findNearestFieldAndMaker(mTrans[i]); // find near field and marker
 			drawAR(mID[i],i); // draw object on marker
+		
 			// check [markerID] is in [markerIDcardFront] and in field must set by mIDcBack only
 			if((findIndex(this->mIDcFront,mID[i])!=-1)/*&&(f1.getMarkerIDsetted(2)==mIDcBack)&&(f1.getMarkerIDsetted(5)==mIDcBack)*/)
 			{
-				nearField = f1.findNearestFieldAndMaker(mTrans[i]);
 				// if distance<100 set card to field
 				if((nearField==2 || nearField==5) && calDistance(f1.getfPos(nearField),mTrans[i])<100)
 				{
@@ -429,7 +423,7 @@ void testApp::draw(){
 			if(findIndex(mIDcFront,f1.getMarkerIDsetted(2))!=-1 && findIndex(mIDcFront,f1.getMarkerIDsetted(5))!=-1)
 			{	
 				gameState = 3; // change game state
-				cout<<"Change gameState = 3 : All player flip card done"<<endl;
+				cout<<"Change gameState = 3 : All player flip character card done"<<endl;
 				runtime = true;
 			}
 		}
@@ -448,15 +442,15 @@ void testApp::draw(){
 			// get [Marker Translation] from current [MakerIndex[i]]
 			mTrans.push_back(artk.getTranslation(i));
 		}
+
 		for(int i=0; i<mID.size(); i++)
 		{
-			if(mID[i]==mIDcField){f1.updateCardFieldPosition(mTrans[i]);}; // update position of field card
+			if(mID[i]==mIDcField){f1.updateCardFieldPosition(mTrans[i]);} // update position of field card
+			nearField = f1.findNearestFieldAndMaker(mTrans[i]); // find near field and marker
 			drawAR(mID[i],i); // draw object on marker
-			
+
 			if(mID[i]==mIDscBack)
 			{
-				nearField = f1.findNearestFieldAndMaker(mTrans[i]);
-				
 				// if p1 attack and p2 defend
 				if(((nearField==1 || nearField==4) && calDistance(f1.getfPos(nearField),mTrans[i])<100))
 				{
@@ -476,16 +470,18 @@ void testApp::draw(){
 					if(f1.getMarkerIDsetted(nearField)==mIDscBack){PL.setTurn(0);PR.setTurn(1);} // set play turn
 				}
 			}			
+		
+			// check player turn and flip card, detect first card flip
+			if((PL.isTurn() && f1.getMarkerIDsetted(1)==mIDscBack && f1.getMarkerIDsetted(4)==mIDscBack) ||
+				(PR.isTurn() && f1.getMarkerIDsetted(6)==mIDscBack && f1.getMarkerIDsetted(3)==mIDscBack))
+			{	
+				gameState = 4; // change game state
+				cout<<"Change gameState = 4 : All player set support card done and ready to fight"<<endl;
+				runtime = true;
+			}
 		}
 
-		// check player turn
-		if((PL.isTurn() && f1.getMarkerIDsetted(1)==mIDscBack && f1.getMarkerIDsetted(4)==mIDscBack) ||
-			(PR.isTurn() && f1.getMarkerIDsetted(6)==mIDscBack && f1.getMarkerIDsetted(3)==mIDscBack))
-		{	
-			gameState = 4; // change game state
-			cout<<"Change gameState = 4 : All player ready to fight"<<endl;
-			runtime = true;
-		}
+	
 	}
 	// set back support card done ,
 	// wait: pATK and pDEF flip card to front => 5
@@ -503,34 +499,68 @@ void testApp::draw(){
 		for(int i=0; i<mID.size(); i++)
 		{
 			if(mID[i]==mIDcField){f1.updateCardFieldPosition(mTrans[i]);}; // update position of field card
+			nearField = f1.findNearestFieldAndMaker(mTrans[i]); // find near field and marker
 			drawAR(mID[i],i); // draw object on marker
 
-			// check mID is contain in mIDscFront
-			if(findIndex(mIDscFront,mID[i])!=-1)
+			//// check mID is contain in mIDscFront
+			//if(findIndex(mIDscFront,mID[i])!=-1)
+			//{
+			//	nearField = f1.findNearestFieldAndMaker(mTrans[i]);
+			//	if(PL.isTurn() && nearField==4 && calDistance(f1.getfPos(nearField),mTrans[i])<100)
+			//	{
+			//		f1.setFMisEmpty(nearField); // clear slot for set new card
+			//		d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
+			//	}
+			//	else if(PR.isTurn() && nearField==3 && calDistance(f1.getfPos(nearField),mTrans[i])<100)
+			//	{
+			//		f1.setFMisEmpty(nearField); // clear slot for set new card
+			//		d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
+			//	}
+			//}
+
+			//// check mID is mIDcAtkFront
+			//if(mID[i]==mIDcAtkFront)
+			//{
+			//	nearField = f1.findNearestFieldAndMaker(mTrans[i]);
+			//	if(PL.isTurn() && nearField==1 && calDistance(f1.getfPos(nearField),mTrans[i])<100)
+			//	{
+			//		f1.setFMisEmpty(nearField); // clear slot for set new card
+			//		d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
+			//	}
+			//	else if(PR.isTurn() && nearField==6 && calDistance(f1.getfPos(nearField),mTrans[i])<100)
+			//	{
+			//		f1.setFMisEmpty(nearField); // clear slot for set new card
+			//		d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
+			//	}
+			//}
+
+			// if p1 attack
+			if(PL.isTurn())
 			{
-				nearField = f1.findNearestFieldAndMaker(mTrans[i]);
-				if(PL.isTurn() && nearField==4 && calDistance(f1.getfPos(nearField),mTrans[i])<100)
+				// check field slot is set by mIDscBack
+				if(mIDcAtkFront==mID[i] && nearField==1 && calDistance(f1.getfPos(nearField),mTrans[i])<100 && f1.getMarkerIDsetted(1)==mIDscBack)
 				{
 					f1.setFMisEmpty(nearField); // clear slot for set new card
 					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
 				}
-				else if(PR.isTurn() && nearField==3 && calDistance(f1.getfPos(nearField),mTrans[i])<100)
+				// check field slot is set by mIDscBack, check card flip is support card
+				if(findIndex(mIDscFront,mID[i])!=-1 && nearField==4 && calDistance(f1.getfPos(nearField),mTrans[i])<100 && f1.getMarkerIDsetted(4)==mIDscBack)
 				{
 					f1.setFMisEmpty(nearField); // clear slot for set new card
 					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
 				}
 			}
-
-			// check mID is mIDcAtkFront
-			if(mID[i]==mIDcAtkFront)
+			// if p1 attack
+			else if(PR.isTurn())
 			{
-				nearField = f1.findNearestFieldAndMaker(mTrans[i]);
-				if(PL.isTurn() && nearField==1 && calDistance(f1.getfPos(nearField),mTrans[i])<100)
+				// check field slot is set by mIDscBack
+				if(mIDcAtkFront==mID[i] && nearField==6 && calDistance(f1.getfPos(nearField),mTrans[i])<100 && f1.getMarkerIDsetted(6)==mIDscBack)
 				{
 					f1.setFMisEmpty(nearField); // clear slot for set new card
 					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
 				}
-				else if(PR.isTurn() && nearField==6 && calDistance(f1.getfPos(nearField),mTrans[i])<100)
+				// check field slot is set by mIDscBack, check card flip is support card
+				if(findIndex(mIDscFront,mID[i])!=-1 && nearField==3 && calDistance(f1.getfPos(nearField),mTrans[i])<100 && f1.getMarkerIDsetted(3)==mIDscBack)
 				{
 					f1.setFMisEmpty(nearField); // clear slot for set new card
 					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
@@ -538,11 +568,11 @@ void testApp::draw(){
 			}
 		}
 		// 
-		if((PL.isTurn() && findIndex(mIDscFront,f1.getMarkerIDsetted(4))!=-1) && f1.getMarkerIDsetted(6)==mIDcAtkFront || 
-			(PR.isTurn() && findIndex(mIDscFront,f1.getMarkerIDsetted(3))!=-1) && f1.getMarkerIDsetted(1)==mIDcAtkFront)
+		if((PL.isTurn() && findIndex(mIDscFront,f1.getMarkerIDsetted(4))!=-1) && f1.getMarkerIDsetted(1)==mIDcAtkFront || 
+			(PR.isTurn() && findIndex(mIDscFront,f1.getMarkerIDsetted(3))!=-1) && f1.getMarkerIDsetted(6)==mIDcAtkFront)
 		{	
 			gameState = 5; // change game state
-			cout<<"Change gameState = 5 : All player flip card done"<<endl;
+			cout<<"Change gameState = 5 : All player flip support card, The Fighting is begin !!"<<endl;
 			runtime = true;
 		}
 	}
@@ -649,12 +679,10 @@ void testApp::draw(){
 		for(int i=0; i<mID.size(); i++)
 		{
 			if(mID[i]==mIDcField){f1.updateCardFieldPosition(mTrans[i]);}; // update position of field card
+			nearField = f1.findNearestFieldAndMaker(mTrans[i]); // find near field and marker
 			drawAR(mID[i],i); // draw object on marker
-
-			if(PL.isAlive() && PR.isAlive())
-			{	gameState = 3;	f1.setFMisEmpty(1);	f1.setFMisEmpty(3);	f1.setFMisEmpty(4);	f1.setFMisEmpty(6);}
-			else
-			{	gameState = 7;	}
+			gameState = 6;
+			cout<<"Change gameState = 6 : Calculate damage completed and ending this turn"<<endl;
 		}
 	}
 	// show effect and calculate player hp ,
@@ -674,9 +702,19 @@ void testApp::draw(){
 		for(int i=0; i<mID.size(); i++)
 		{
 			if(mID[i]==mIDcField){f1.updateCardFieldPosition(mTrans[i]);}; // update position of field card
+			nearField = f1.findNearestFieldAndMaker(mTrans[i]); // find near field and marker
 			drawAR(mID[i],i); // draw object on marker
 			
-
+			if(PL.isAlive() && PR.isAlive())
+			{	
+				gameState = 3;	f1.setFMisEmpty(1);	f1.setFMisEmpty(3);	f1.setFMisEmpty(4);	f1.setFMisEmpty(6);
+				cout<<"Change gameState = 3 : Calculate damage completed and ending this turn"<<endl;
+			}else
+			{	
+				gameState = 7;
+				if(PL.isAlive()){}
+				cout<<"Change gameState = 7 : Player"<<endl;
+			}
 		}
 	}
 	// got winner and game end
@@ -694,6 +732,7 @@ void testApp::draw(){
 		for(int i=0; i<mID.size(); i++)
 		{
 			if(mID[i]==mIDcField){f1.updateCardFieldPosition(mTrans[i]);}; // update position of field card
+			nearField = f1.findNearestFieldAndMaker(mTrans[i]); // find near field and marker
 			drawAR(mID[i],i); // draw object on marker
 		}
 	}
@@ -739,6 +778,18 @@ void testApp::keyPressed(int key){
 		gameState = 6;
 		runtime = true;
 	}
+	else if(key == 'o'){
+		mw += 5.0;
+		mh += 5.0;
+		f1.setWH(mw,mh);
+		cout<<"mw mh : "<<mw<<" "<<mh<<endl;
+	}
+	else if(key == 'p'){
+		mw -= 5.0;
+		mh -= 5.0;
+		f1.setWH(mw,mh);
+		cout<<"mw mh : "<<mw<<" "<<mh<<endl;
+	}
 	#ifdef CAMERA_CONNECTED
 	if(key == 's' || key == 'S') {
 		vidGrabber.videoSettings();
@@ -783,7 +834,9 @@ void testApp::drawAR(int markerID,int mrIndex){
 	this->drawAR(markerID,mrIndex,"");
 }
 void testApp::drawAR(int markerID,int mrIndex,string mname){
-	artk.applyModelMatrix(mrIndex); //input = [marker index] as want to draw graphic **not markerID**	
+	artk.applyModelMatrix(mrIndex); //input = [marker index] as want to draw graphic **not markerID**
+	glPushMatrix();
+
 	if(markerID==mIDcField)// check if is [field card]
 	{
 		glPushMatrix();
@@ -791,28 +844,11 @@ void testApp::drawAR(int markerID,int mrIndex,string mname){
 			ofNoFill();		
 			ofEnableSmoothing();
 			ofEnableAlphaBlending();    // turn on alpha blending
-			ofSetColor(255,0,255,127);    // pink, 50% transparent
-			ofRect(-75, -75, 150, 150);
-
-			ofSetColor(0, 0, 255, 127);
-			ofRect(25, -75, 50, 50); // field 4
-			ofSetColor(0, 255, 0, 127);
-			ofRect(25, -25, 50, 50); // field 5
-			ofSetColor(255, 0, 0, 127);
-			ofRect(25, 25, 50, 50); // field 6
-			ofSetColor(255, 0, 0, 127);
-			ofRect(-75, -75, 50, 50); // field 6
-
-			//ofSetColor(255, 0, 0, 127);
-			//ofRect(-75, -75, 50, 50); // field 1
-			//ofSetColor(0, 255, 0, 127);
-			//ofRect(-75, -25, 50, 50); // field 2
-			//ofSetColor(0, 0, 255, 127);
-			//ofRect(-75, 25, 50, 50); // field 3
+			f1.drawField(); // call function draw field
 			ofDisableAlphaBlending();   // turn off alpha
 
 			ofSetColor(255, 255, 255);
-			cardFieldImage.draw(-25,-25,50,50);	// draw image
+			//cardFieldImage.draw(-25,-25,50,50);	// draw image
 			glPushMatrix();
 				ofSetColor(255, 0, 255);
 				glScalef(0.5,0.5,0.5);
@@ -951,6 +987,8 @@ void testApp::drawAR(int markerID,int mrIndex,string mname){
 		/*ofDrawBitmapString(ofToString(mTrans[mrIndex][0]) + 
 		"\n" + ofToString(mTrans[mrIndex][1]) + 
 		"\n" + ofToString(mTrans[mrIndex][2]),-10 , 0);*/
+	glPopMatrix();
+
 	glPopMatrix();
 }
 //--------------------------------------------------------------
