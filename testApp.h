@@ -28,7 +28,7 @@ public:
 	void drawAR(int markerID,int mrIndex,string mname);
 
 	// draw graphic effect
-	void drawEffect(int markerIndex);
+	void drawEffect(int mIndex);
 
 	// find index of first value to match input ,return -1 if no match
 	//template <class T>
@@ -76,6 +76,7 @@ public:
 	/* Load model */
 	//ofx3DModelLoader capModel;
 	//ofx3DModelLoader squirrelModel;
+	ofx3DModelLoader mAss;
 
 	// use threshold
 	bool pict;
@@ -155,6 +156,12 @@ public:
 	// scale for all marker graphic
 	float mw;
 	float mh;
+
+	// hp bar
+	ofRectangle plDis;
+	ofRectangle plHpBar;
+	ofRectangle prDis;
+	ofRectangle prHpBar;
 
 	// use true type font
 	ofTrueTypeFont myFont;

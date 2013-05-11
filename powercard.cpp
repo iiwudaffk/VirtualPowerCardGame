@@ -359,7 +359,8 @@ void Field::drawField(){
 	ofSetColor(0, 0, 255, 127);
 	ofRect(ofPoint((0+fw) - fw/2.0,(0+fw) - fh/2.0), fw, fh); // field 4
 	ofSetColor(255, 0, 0, 127);
-	ofRect(ofPoint((0+fw) - fw/2.0,(0-fw) - fh/2.0), fw, fh); // field 6	
+	ofRect(ofPoint((0+fw) - fw/2.0,(0-fw) - fh/2.0), fw, fh); // field 6
+
 }
 ////////////////////////////////////////////
 

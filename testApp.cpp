@@ -1,4 +1,9 @@
 #include "testApp.h"
+GLfloat lightOnePosition[] = {40.0, 40, 100.0, 0.0};
+GLfloat lightOneColor[] = {0.99, 0.99, 0.99, 1.0};
+
+GLfloat lightTwoPosition[] = {-40.0, 40, 100.0, 0.0};
+GLfloat lightTwoColor[] = {0.99, 0.99, 0.99, 1.0};
 
 //--------------------------------------------------------------
 void testApp::setup(){
@@ -12,11 +17,13 @@ void testApp::setup(){
 	mw = mh = 50.0;
 
 	gameState = 0; // ready to game start
-	//PL.calculateHP(-500); // set HP
-	//PR.calculateHP(-500); // set HP
 
 	//PL.setTurn(1); // first play
 	//PR.setTurn(0); // second play
+
+	// setup hp bar
+	plDis.setFromCenter(ofPoint(0 + 100.0/2.0,height - 100.0/2.0),100.0,100.0);
+	prDis.setFromCenter(ofPoint(width - 100.0/2.0,height - 100.0/2.0),100.0,100.0);
 	
 	// setup all character cards
 	c1.setCName("Dark Magician");
@@ -98,7 +105,6 @@ void testApp::setup(){
 	mIDscFront.push_back(sc3.cmIdFront());
 	mIDscFront.push_back(sc4.cmIdFront());
 
-
 	delete r1,r2,r3,r4,r5;
 
 	width = 800;	height = 600;
@@ -150,12 +156,13 @@ void testApp::setup(){
 	
 	/* ================================== Load ModeL ================================= */
 	
-	
-	//ofSetVerticalSync(true);
-	
-	//some model / light stuff
-    //glEnable (GL_DEPTH_TEST);
-    //glShadeModel (GL_SMOOTH);
+	ofBackground(255,255,255);
+		
+	ofSetVerticalSync(true);
+
+    //some model / light stuff
+    glEnable (GL_DEPTH_TEST);
+    glShadeModel (GL_SMOOTH);
 
     /* initialize lighting */
     //glLightfv (GL_LIGHT0, GL_POSITION, lightOnePosition);
@@ -165,22 +172,14 @@ void testApp::setup(){
     //glLightfv (GL_LIGHT1, GL_DIFFUSE, lightTwoColor);
     //glEnable (GL_LIGHT1);
     //glEnable (GL_LIGHTING);
-    //glColorMaterial (GL_FRONT_AND_BACK, GL_DIFFUSE);
-    //glEnable (GL_COLOR_MATERIAL);
+    glColorMaterial (GL_FRONT_AND_BACK, GL_DIFFUSE);
+    glEnable (GL_COLOR_MATERIAL);
+
+	mAss.loadModel("squirrel/Altair Model/altair.3ds",0.8);
+	mAss.setPosition(0.0, 0.0, 0.0);
+	mAss.setRotation(1,90,1,0,0);
+	mAss.setPosition(0.0, 0.0, 50.0);
 	
-    //load the squirrel model - the 3ds and the texture file need to be in the same folder
-	//squirrelModel.loadModel("squirrel/NewSquirrel.3ds", 5);
-	//capModel.loadModel("squirrel/cap22.3ds", 5);
-
-    //you can create as many rotations as you want
-    //choose which axis you want it to effect
-    //you can update these rotations later on
-	//squirrelModel.setScale(0.9, 0.9, 0.9);
-    
-	//squirrelModel.setRotation(1, 270, 0, 1, 0);
-	//squirrelModel.setPosition(0.0, 0.0, 0.0);
-	//capModel.setPosition(0.0, 0.0, 0.0);
-
 }
 
 //--------------------------------------------------------------
@@ -268,21 +267,67 @@ void testApp::draw(){
 	ofDrawBitmapString("P2 Life : " + ofToString(PR.isAlive()), 700, 120);
 	ofDrawBitmapString("P2 Turn : " + ofToString(PR.isTurn()), 700, 140);
 
-	//ofSetLineWidth(5);
-	//ofNoFill();	
-	//ofSetColor(255, 0, 0);
-	//ofRect(50, 50, 50, 50);
+	ofSetLineWidth(5);
+	ofNoFill();	
+	ofEnableAlphaBlending();    // turn on alpha blending
+	ofSetColor(255, 0, 0, 235);
+	ofRect(ofPoint(0,500),100,100);
+	ofSetColor(0, 0, 255, 235);
+	ofRect(ofPoint(700,500),100,100);
+
+	// draw hp bar
+	ofSetLineWidth(1);
+	ofFill();
+	glBegin(GL_POLYGON);
+	ofSetColor(255, 0, 0, 190);
+	glVertex3f(100,height - 20,0);
+	ofSetColor(255, 0, 0, 190);
+	glVertex3f(100,width,0);
+	ofSetColor(0, 255, 0, 190);
+	glVertex3f(width/2.0,width,0);
+	ofSetColor(0, 255, 0, 190);
+	glVertex3f(width/2.0,height - 20,0);
+	glEnd();
+
+	glBegin(GL_POLYGON);
+	ofFill();
+	ofSetColor(255, 0, 0, 190);
+	glVertex3f(width - 100,height - 20,0);
+	ofSetColor(255, 0, 0, 190);
+	glVertex3f(width - 100,width,0);
+	ofSetColor(0, 255, 0, 190);
+	glVertex3f(width/2.0,width,0);
+	ofSetColor(0, 255, 0, 190);
+	glVertex3f(width/2.0,height - 20,0);
+	glEnd();
+
+	// draw hp slot
+	ofSetLineWidth(3);
+	ofNoFill();
+	glBegin(GL_LINE_LOOP);
+	ofSetColor(255, 0, 0, 235);
+	glVertex3f(100,height - 20,0);
+	glVertex3f(100,width - 2,0);
+	glVertex3f(width/2.0 - 1,width - 2,0);
+	glVertex3f(width/2.0 - 1,height - 20,0);
+	glVertex3f(100,580,0);
+	glEnd();
+
+	glBegin(GL_LINE_LOOP);
+	ofNoFill();
+	ofSetColor(0, 0, 255, 235);
+	glVertex3f(width - 100,height - 20,0);
+	glVertex3f(width - 100,width - 2,0);
+	glVertex3f(width/2.0 + 1,width - 2,0);
+	glVertex3f(width/2.0 + 1,height - 20,0);
+	glVertex3f(width - 100,height - 20,0);
+	glEnd();
+	
+	ofDisableAlphaBlending();   // turn off alpha
 
 
 	
 	
-	
-	//ofFill();
-	//ofEnableAlphaBlending();    // turn on alpha blending
-	//ofSetColor(255,0,0,127);    // red, 50% transparent
-	//ofRect(20,20,100,100);      // draws the rect with alpha
-	//ofDisableAlphaBlending();   // turn off alpha
-	//ofRect(120,20,100,100); // draws the rect without alpha
 
 	// ARTK draw
 	// An easy was to see what is going on
@@ -738,7 +783,7 @@ void testApp::draw(){
 	}
 
 
-	//glDisable (GL_DEPTH_TEST);
+	glDisable (GL_DEPTH_TEST);
 }
 
 //--------------------------------------------------------------
@@ -846,7 +891,12 @@ void testApp::drawAR(int markerID,int mrIndex,string mname){
 			ofEnableAlphaBlending();    // turn on alpha blending
 			f1.drawField(); // call function draw field
 			ofDisableAlphaBlending();   // turn off alpha
-
+			mAss.setScale(1.0 + (mw - 50)*0.025,1.0 + (mw - 50)*0.025,1.0 + (mw - 50)*0.025);
+			mAss.setPosition(0,0,50.0 + (mw - 50)*1.5);
+			ofFill();	
+			mAss.draw();
+			
+			ofNoFill();	
 			ofSetColor(255, 255, 255);
 			//cardFieldImage.draw(-25,-25,50,50);	// draw image
 			glPushMatrix();
@@ -991,6 +1041,12 @@ void testApp::drawAR(int markerID,int mrIndex,string mname){
 
 	glPopMatrix();
 }
+
+//--------------------------------------------------------------
+void testApp::drawEffect(int mIndex){
+
+}
+
 //--------------------------------------------------------------
 int testApp::findIndex (vector<int> series, int v)
 {
@@ -1003,6 +1059,8 @@ int testApp::findIndex (vector<int> series, int v)
 	}
 	return(-1);  /* if it was not found */
 }
+
+
 
 ////--------------------------------------------------------------
 //float testApp::calDistance(ofPoint p1,ofPoint p2){
