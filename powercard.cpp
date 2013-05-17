@@ -12,6 +12,7 @@ Player::Player(){
 	setATK(0);
 	setDEF(0);
 	setHP(100);
+	pAlive = true;
 }
 
 Player::Player(int atk,int def,int hp){
@@ -153,13 +154,6 @@ Field::Field(int initMarkerID,ofPoint markerTransInitMarkerID){
 }
 
 Field::Field(int initMarkerID,ofPoint markerTransInitMarkerID,float w,float h){
-	//field[0].fSetByMarkerID = initMarkerID;
-	//for(int i=1;i<9;i++)
-	//{
-	//	field[i].fSetByMarkerID = (-1);
-	//}
-	//Field::updateCardFieldPosition(markerTransInitMarkerID);
-
 	fMarkerID[0] = initMarkerID;
 	for(int i=1;i<9;i++)
 	{
@@ -171,12 +165,6 @@ Field::Field(int initMarkerID,ofPoint markerTransInitMarkerID,float w,float h){
 }
 
 Field::~Field(){
-	
-	//for(int i=0;i<9;i++)
-	//{
-	//	field[i].fPos = ofPoint(-1,-1,-1);
-	//	field[i].fSetByMarkerID = -1;
-	//}
 	for(int i=0;i<9;i++)
 	{
 		fSlot[i].setFromCenter(ofPoint(0,0,0),50,50);
@@ -218,17 +206,6 @@ void Field::setWH(float w,float h){
 }
 
 int Field::setFieldByMarkerID(int fNo,int mID){
-	//if(isEmpty(fNo))
-	//{
-	//	field[fNo].fSetByMarkerID = mID;
-	//	//cout<<"set card "<<mID<<", to Field "<<fNo<<" done"<<endl;
-	//	return -1;
-	//}
-	//else
-	//{
-	//	//cout<<"cannot set card "<<mID<<", to Field "<<fNo<<endl;
-	//	return field[fNo].fSetByMarkerID;
-	//}
 	if(isEmpty(fNo))
 	{
 		fMarkerID[fNo] = mID;
@@ -243,8 +220,6 @@ int Field::setFieldByMarkerID(int fNo,int mID){
 }
 
 void Field::setFMisEmpty(int fNo){
-	//if(!isEmpty(fNo)) 
-	//{field[fNo].fSetByMarkerID=-1;}
 	if(!isEmpty(fNo)) 
 	{fMarkerID[fNo]=-1;}
 }
@@ -297,23 +272,6 @@ int Field::findNearestFieldAndMaker(ofPoint pMarker){
 }
 
 int Field::countIDMarker(int markerID){
-	//int c = 0;
-	//int s = sizeof(field)/sizeof(field[0]);
-	//cout<<"-------------------"<<endl;
-	//cout<<"sizeof(arr) : "<<sizeof(field)<<endl;
-	//cout<<"sizeof(*arr) : "<<sizeof(*field)<<endl;
-	//cout<<"sizeof(arr[0]) : "<<sizeof(field[0])<<endl;
-	//cout<<"sizeof(&arr) : "<<sizeof(&field)<<endl;
-	//cout<<"sizeof(arr) : "<<s<<endl;
-	//
-	//for (int i=0; i<(s); i++)
-	//{
-	//	if(field[i].fSetByMarkerID == markerID) c++;
-	//	cout<<"i : "<<i<<", ID : "<<field[i].fSetByMarkerID<<endl;
-	//}
-	//cout<<"-------------------"<<endl;
-	//return c;
-	
 	int c = 0;
 	int s = sizeof(fMarkerID)/sizeof(fMarkerID[0]);
 	cout<<"-------------------"<<endl;
@@ -350,6 +308,9 @@ void Field::drawField(){
 	ofSetColor(0, 255, 0, 127);
 	ofRect(ofPoint((0-fw) - fw/2.0,0 - fh/2.0), fw, fh); // field 2
 	ofSetColor(255, 0, 0, 127);
+	//ofFill();
+	ofCircle(ofPoint(0-fw ,0),fw/2.5);
+	ofNoFill();
 	ofRect(ofPoint((0-fw) - fw/2.0,(0+fw) - fh/2.0), fw, fh); // field 1
 	ofSetColor(0, 0, 255, 127);
 	ofRect(ofPoint((0-fw) - fw/2.0,(0-fw) - fh/2.0), fw, fh); // field 3
@@ -357,9 +318,19 @@ void Field::drawField(){
 	ofSetColor(0, 255, 0, 127);
 	ofRect(ofPoint((0+fw) - fw/2.0,0 - fh/2.0), fw, fh); // field 5
 	ofSetColor(0, 0, 255, 127);
+	//ofFill();
+	ofCircle(ofPoint(0+fw ,0),fw/2.5);
+	ofNoFill();
 	ofRect(ofPoint((0+fw) - fw/2.0,(0+fw) - fh/2.0), fw, fh); // field 4
 	ofSetColor(255, 0, 0, 127);
-	ofRect(ofPoint((0+fw) - fw/2.0,(0-fw) - fh/2.0), fw, fh); // field 6	
+	ofRect(ofPoint((0+fw) - fw/2.0,(0-fw) - fh/2.0), fw, fh); // field 6
+
+	ofSetColor(255, 0, 0, 127);
+	ofDrawBitmapString("Field ", 0 - fw/2.0, (0+fw) - fh/2.0);
+	//ofRect(ofPoint(0 - fw/2.0,(0+fw) - fh/2.0), fw, fh); // field 7
+	//ofSetColor(255, 0, 0, 127);
+	//ofRect(ofPoint(0 - fw/2.0,(0-fw) - fh/2.0), fw, fh); // field 8
+
 }
 ////////////////////////////////////////////
 
@@ -383,23 +354,25 @@ void Card::drawEffectCard(){}
 // Class Character extend
 ////////////////////////////////////////////
 Character::Character(){
-
+	this->cName = "";
 }
 
 Character::~Character(){
 
 }
 
-void Character::setATK(int a){this->cATK = a;}
+void Character::setATK(int min,int max){this->cATKmin = min; this->cATKmax = max;}
 void Character::setDEF(int d){this->cDEF = d;}
-void Character::setAtkRate(float r[]){memcpy(this->cAtkRate,r,10);}
-int Character::atk(){return this->cATK;}
+//void Character::setAtkRate(float r[]){memcpy(this->cAtkRate,r,10);}
+int Character::atk(){return floor(ofRandom(this->minATK(),this->maxATK()) + 0.50);}
+int Character::minATK(){return this->cATKmin;}
+int Character::maxATK(){return this->cATKmax;}
 int Character::def(){return this->cDEF;}
-void Character::getAtkRating(float ar[]){memcpy(ar,this->cAtkRate,10);}
-float Character::atkRate(){ 
-	int a = floor(ofRandom(11));
-	return this->cAtkRate[a];
-}
+//void Character::getAtkRating(float ar[]){memcpy(ar,this->cAtkRate,10);}
+//float Character::atkRate(){ 
+//	int a = floor(ofRandom(11));
+//	return this->cAtkRate[a];
+//}
 
 	
 ////////////////////////////////////////////

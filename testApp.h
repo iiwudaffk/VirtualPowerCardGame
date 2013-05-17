@@ -28,7 +28,7 @@ public:
 	void drawAR(int markerID,int mrIndex,string mname);
 
 	// draw graphic effect
-	void drawEffect(int markerIndex);
+	void drawEffect(int mIndex);
 
 	// find index of first value to match input ,return -1 if no match
 	//template <class T>
@@ -76,9 +76,22 @@ public:
 	/* Load model */
 	//ofx3DModelLoader capModel;
 	//ofx3DModelLoader squirrelModel;
+	//ofx3DModelLoader mAss;
 
 	// use threshold
 	bool pict;
+
+	// show detail
+	bool dtext;
+
+	// show draw ar
+	bool ar;
+
+	// show hp bar
+	bool hpbar;
+
+	// depth
+	bool dep;
 
 	// game state number
 	int gameState;
@@ -86,7 +99,6 @@ public:
 	* 0 = open program first time ,found field card => 1
 	* 1 = found field marker ,wait: p1 set character back card && p2 set character back card => 2
 	* 2 = set character back card done ,wait: p1 flip card to front  && p2 flip card to front => 3
-
 	* 3 = set character card done ,wait: pATK set back attack card && pDEF set back support card => 4
 	* 4 = set back support card done ,wait: pATK and pDEF flip card to front => 5
 	* 5 = fighting turn and calculate damage ,wait: time delay => 6
@@ -100,12 +112,18 @@ public:
 
 	// nearest marker and field
 	int nearField;
+	float dm;
 
 	// Image back card
 	ofImage cardBackImage;
 
 	// Image field card
 	ofImage cardFieldImage;
+
+	ofImage cardCharacter[5];
+	ofImage cardDef[4];
+	ofImage cardAtk;
+
 
 	// Player for play
 	Player PL;
@@ -118,6 +136,14 @@ public:
 	Character c4;
 	Character c5;
 	vector<Character> clist;
+
+	// model for character card
+	ofx3DModelLoader mc1;
+	ofx3DModelLoader mc2;
+	ofx3DModelLoader mc3;
+	ofx3DModelLoader mc4;
+	ofx3DModelLoader mc5;
+	vector<ofx3DModelLoader> mclist;
 
 	// all support card
 	Card sc1;
@@ -152,12 +178,26 @@ public:
 	int it;
 	bool runtime;
 
+	// animation effect
+	bool effectrun;
+	int effecttime;
+	int effectx;
+
+
 	// scale for all marker graphic
 	float mw;
 	float mh;
 
+	// color for Player's HP bar
+	ofColor co0;
+	ofColor co1;
+	ofColor co2;
+
+	//ofRandom ran;
+
 	// use true type font
-	ofTrueTypeFont myFont;
+	ofTrueTypeFont font[3];
+
 
 };
 

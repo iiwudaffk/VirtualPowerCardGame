@@ -205,28 +205,47 @@ class Character : public Card
 {
 protected:
 
-	// Character's attack power
-	int cATK;
+	//// Character's attack power
+	//int cATK;
 	// Character's defence power
 	int cDEF;
 	// Character's attack rating
-	float cAtkRate[10];
+	//float cAtkRate[10];
+
+	// Character's minimum attack power
+	int cATKmin;
+	// Character's maximum attack power
+	int cATKmax;
+	
+	//// Character's minimum defence power
+	//int minDEF;
+	//// Character's maximum defence power
+	//int maxDEF;
+
+	//int criRate;
+	//int defRate;
 public:
 	Character();
 	~Character();
 
-	void setATK(int a);
+	//void setATK(int a);
+	//void setDEF(int d);
+
+	void setATK(int min,int max);
 	void setDEF(int d);
-	void setAtkRate(float r[]);
+	//void setAtkRate(float r[]);
 
 	// get card's attack power
 	int atk();
 	// get card's defence power
-	int def();	
+	int def();
+
+	int minATK();
+	int maxATK();
 	// generate attack rating by random
-	float atkRate();
+	//float atkRate();
 	// get attack rating
-	void getAtkRating(float ar[]);
+	//void getAtkRating(float ar[]);
 };
 
 
