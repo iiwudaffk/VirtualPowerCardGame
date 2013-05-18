@@ -1,4 +1,3 @@
-
 Vitual Power Card Game
 
 ===============
