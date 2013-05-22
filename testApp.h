@@ -11,7 +11,7 @@
 #include "glut.h"
 #include "powercard.h"
 //#include <fstream>
-
+using namespace std;
 
 // Uncomment this to use a camera instead of a video file
 #define CAMERA_CONNECTED
@@ -31,22 +31,12 @@ public:
 	void drawEffect(int mIndex);
 
 	// find index of first value to match input ,return -1 if no match
-	//template <class T>
-	//int findIndex (vector<T> series, T v);
 	int findIndex (vector<int> series, int v);
 
 	// calculate distance between 2 marker
 	//float calDistance(ofPoint p1,ofPoint p2);
 
-	void keyPressed  (int key);
-	//void keyReleased(int key);
-	//void mouseMoved(int x, int y );
-	//void mouseDragged(int x, int y, int button);
-	//void mousePressed(int x, int y, int button);
-	//void mouseReleased(int x, int y, int button);
-	//void windowResized(int w, int h);
-
-	//float testApp::findHueInArea(cv::Mat &input, cv::Point input_point, int radius)
+	void keyPressed (int key);
 
 	/* Size of the image */
 	int width, height;
@@ -93,6 +83,9 @@ public:
 	// depth
 	bool dep;
 
+	// field info
+	bool fmaker;
+
 	// game state number
 	int gameState;
 	/* 
@@ -113,6 +106,7 @@ public:
 	// nearest marker and field
 	int nearField;
 	float dm;
+	float distanceSet;
 
 	// Image back card
 	ofImage cardBackImage;
@@ -182,6 +176,14 @@ public:
 	bool effectrun;
 	int effecttime;
 	int effectx;
+
+	// show damage
+	bool effectrun2;
+	int effecttime2;
+	int effectshow;
+
+	bool showhpdone;
+	bool showhpdone2;
 
 
 	// scale for all marker graphic

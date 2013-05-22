@@ -8,18 +8,29 @@
 //--------------------------------------------------------------
 void testApp::setup(){
 	pict = false; 
-	hpbar = dtext = true;
+	hpbar  = true;
+	dtext = false;
 	ar = dep = true;
 	wt = 0;
 	it = 999;
 	runtime = false;
 	mIDcField = 0;
 	mIDcBack = mIDscBack = 1;
-	mIDcAtkFront = 9;
+	mIDcAtkFront = 7;
 	mw = mh = 75.0;
 	effectrun = false;
 	effecttime = 999;
 	effectx = 0;
+
+	effectrun2 = false;
+	effecttime2 = 999;
+	effectshow = 0;
+	showhpdone = false;
+	showhpdone2 = false;
+
+	fmaker = true;
+	distanceSet = 1000;
+
 
 	gameState = 0; // ready to game start
 
@@ -112,7 +123,7 @@ void testApp::setup(){
 
 	//delete r1,r2,r3,r4,r5;
 
-	width = 800;	height = 600;
+	width = 1280;	height = 800;
 
 	//glutInitDisplayMode(GLUT_DEPTH);
 	vidGrabber.setVerbose(true); // ทับซ้อนกันได้
@@ -144,7 +155,7 @@ void testApp::setup(){
 	// Set the threshold
 	// ARTK+ does the thresholding for us
 	// We also do it in OpenCV so we can see what it looks like for debugging
-	threshold = 85; // normal=85, lightless=40, dark=0
+	threshold = 110; // normal=85, lightless=40, dark=0
 	artk.setThreshold(threshold);
 	//ofBackground(127,127,127);
 
@@ -179,9 +190,9 @@ void testApp::setup(){
 
 
 	// Load true type font
-	font[0].loadFont("comic.ttf",20);
+	font[0].loadFont("comic.ttf",80);
 	font[1].loadFont("COPRGTB.TTF",20);
-	font[2].loadFont("HATTEN.TTF",20);
+	font[2].loadFont("HATTEN.TTF",30);
 
 
 	/* ================================== Load ModeL ================================= */
@@ -262,9 +273,14 @@ void testApp::update(){
 	{runtime=false;wt=0;it=999;}
 
 	if(effectrun)
-	{effectx+=5;}
+	{effectx+=2;}
 	//if(effectx>=effecttime)
 	//{effectrun=false;effectx=0;effecttime=999;}
+
+	//if(effectrun2)
+	//{effectshow++;}
+	//if(effectshow>=effecttime2)
+	//{effectrun2=false;effectshow=0;effecttime2=999;}
 
 	f1.setWH(mw,mh);
 	
@@ -298,9 +314,8 @@ void testApp::draw(){
 	{
 	ofSetColor(255,0,0);
 	ofDrawBitmapString(ofToString(artk.getNumDetectedMarkers()) + " marker(s) found", 10, 20);
-	ofDrawBitmapString("Game State: " + ofToString(gameState), 690, 20);
 	ofDrawBitmapString("Threshold: " + ofToString(threshold), 10, 40);
-	ofDrawBitmapString("Use the Up/Down keys to adjust the threshold", 420, 40);
+	ofDrawBitmapString("Use the Up/Down keys to adjust the threshold", (width - 700), 40);
 	ofDrawBitmapString("Near : " + ofToString(nearField), 10, 60);
 	ofDrawBitmapString("Field 0 : " + ofToString(f1.getMarkerIDsetted(0)), 10, 80);
 	ofDrawBitmapString("Field 1 : " + ofToString(f1.getMarkerIDsetted(1)), 10, 100);
@@ -318,19 +333,23 @@ void testApp::draw(){
 	ofDrawBitmapString("effect x : " + ofToString(effectx), 10, 340);
 	ofDrawBitmapString("effect run : " + ofToString(effectrun), 10, 360);
 	ofDrawBitmapString("distance : " + ofToString(dm), 10, 380);
+	ofDrawBitmapString("PL TURN : " + ofToString(PL.isTurn()), 10, 400);
+	ofDrawBitmapString("PL ALIVE : " + ofToString(PL.isAlive()), 10, 420);
+	ofDrawBitmapString("PR TURN : " + ofToString(PR.isTurn()), 10, 440);
+	ofDrawBitmapString("PR ALIVE : " + ofToString(PR.isAlive()), 10, 460);
+	
+	
 	}
 
 	if(hpbar) // toggle show player detail
 	{
-	ofSetColor(255,0,0);
-	ofDrawBitmapString("P1 HP : " + ofToString(PL.hp()), 120, height - 80);
-	ofDrawBitmapString("P1 Life : " + ofToString(PL.isAlive()), 120, height - 60);
-	ofDrawBitmapString("P1 Turn : " + ofToString(PL.isTurn()), 120, height - 40);
 
-	ofDrawBitmapString("P2 HP : " + ofToString(PR.hp()), (width - 200), height - 80);
-	ofDrawBitmapString("P2 Life : " + ofToString(PR.isAlive()), (width - 200), height - 60);
-	ofDrawBitmapString("P2 Turn : " + ofToString(PR.isTurn()), (width - 200), height - 40);
-	
+	ofSetColor(255,0,0);
+	ofDrawBitmapString("Game State: " + ofToString(gameState), (width - 300), 20);
+
+	font[1].drawString("P1 HP : " + ofToString(PL.hp()), 120, height - 80);
+	font[1].drawString("P2 HP : " + ofToString(PR.hp()), (width - 300), height - 80);
+
 
 	
 	ofEnableAlphaBlending();    // turn on alpha blending
@@ -338,23 +357,95 @@ void testApp::draw(){
 	if(gameState==4 || gameState==5 || gameState==6)
 	{
 		if(PL.isTurn())
-		{
+		{			
+			int ia = f1.getMarkerIDsetted(2);
+			int ica = 0;
+			for(int j=0;j<clist.size();j++)
+			{
+				if(ia == clist[j].cmIdFront())
+				{	ica = j;	}
+			}
+			int minatk = clist[ica].minATK();
+			int maxatk = clist[ica].maxATK();
+			int def = clist[ica].def();
+
 			glPushMatrix();
 			ofSetColor(255, 0, 0,127);
 			font[1].drawString("ATK",20, height - 60);
+			font[2].drawString(ofToString(minatk) + "-" + ofToString(maxatk),20, height - 20);
 			ofSetColor(0, 0, 255,127);
 			font[1].drawString("DEF",width - 80, height - 60);
+			font[2].drawString(ofToString(def),width - 80, height - 20);
 			glPopMatrix();
 		}
 		else if(PR.isTurn())
 		{
+			int ia = f1.getMarkerIDsetted(5);
+			int ica = 0;
+			for(int j=0;j<clist.size();j++)
+			{
+				if(ia == clist[j].cmIdFront())
+				{	ica = j;	}
+			}
+			int minatk = clist[ica].minATK();
+			int maxatk = clist[ica].maxATK();
+			int def = clist[ica].def();
+
 			glPushMatrix();
 			ofSetColor(255, 0, 0,127);
 			font[1].drawString("ATK",width - 80, height - 60);
+			font[2].drawString(ofToString(minatk) + "-" + ofToString(maxatk),width - 80, height - 20);
 			ofSetColor(0, 0, 255,127);
 			font[1].drawString("DEF",20, height - 60);
+			font[2].drawString("" + ofToString(def),20, height - 20);
 			glPopMatrix();
 		}
+	}
+
+	// if game state = 6, show effect damage
+	if(gameState==6)
+	{
+		if(effectrun)
+		{
+			if(PL.isTurn())
+			{
+				ofSetColor(255, 0, 0);
+				font[0].drawString("-" + ofToString(CalDmg.paDmg()),100, height - 120);
+				font[0].drawString("-" + ofToString(CalDmg.pdDmg()),width - 300, height - 120);
+				
+				int ia = f1.getMarkerIDsetted(4);
+				int ica = 0;
+				for(int j=0;j<sclist.size();j++)
+				{
+					if(ia == sclist[j].cmIdFront())
+					{	ica = j;	}
+				}
+				string defName = sclist[ica].Cname();
+				font[2].drawString(ofToString(defName),width/2, height - 60);
+
+			}
+			else if(PR.isTurn())
+			{
+				ofSetColor(255, 0, 0);
+				font[0].drawString("-" + ofToString(CalDmg.pdDmg()),100, height - 120);
+				font[0].drawString("-" + ofToString(CalDmg.paDmg()),width - 300, height - 120);
+
+				int ia = f1.getMarkerIDsetted(3);
+				int ica = 0;
+				for(int j=0;j<sclist.size();j++)
+				{
+					if(ia == sclist[j].cmIdFront())
+					{	ica = j;	}
+				}
+				string defName = sclist[ica].Cname();
+				font[2].drawString(ofToString(defName),200, height - 60);
+
+			}
+		}
+		//if(effectshow>=effecttime2)
+		//{showhpdone=true;effectrun2=false;effectshow=0;effecttime2=999;}
+		//if(effectshow>=effecttime2)
+		//{showhpdone=true;effectrun2=false;effectshow=0;effecttime2=999;}
 	}
 
 	ofSetLineWidth(5);
@@ -405,7 +496,7 @@ void testApp::draw(){
 	glVertex3f(100,width - 2,0);
 	glVertex3f(width/2.0 - 1,width - 2,0);
 	glVertex3f(width/2.0 - 1,height - 20,0);
-	glVertex3f(100,580,0);
+	//glVertex3f(100,height - 20,0);
 	glEnd();
 
 	glBegin(GL_LINE_LOOP);
@@ -415,13 +506,12 @@ void testApp::draw(){
 	glVertex3f(width - 100,width - 2,0);
 	glVertex3f(width/2.0 + 1,width - 2,0);
 	glVertex3f(width/2.0 + 1,height - 20,0);
-	glVertex3f(width - 100,height - 20,0);
+	//glVertex3f(width - 100,height - 20,0);
 	glEnd();
 	
 	ofDisableAlphaBlending();   // turn off alpha
 	}
-	
-	
+
 	//glPopMatrix();
 	//glLoadIdentity();
 	//glEnable(GL_DEPTH_TEST);
@@ -491,7 +581,7 @@ void testApp::draw(){
 			{
 				nearField = f1.findNearestFieldAndMaker(mTrans[i]); // find near field and marker
 				dm = calDistance(f1.getfPos(nearField),mTrans[i]);
-				if((nearField==2 || nearField==5) && calDistance(f1.getfPos(nearField),mTrans[i])<100)
+				if((nearField==2 || nearField==5) && calDistance(f1.getfPos(nearField),mTrans[i])<distanceSet)
 				{
 					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
 				}
@@ -529,7 +619,7 @@ void testApp::draw(){
 				nearField = f1.findNearestFieldAndMaker(mTrans[i]); // find near field and marker
 				dm = calDistance(f1.getfPos(nearField),mTrans[i]);
 				// if distance<100 set card to field
-				if((nearField==2 || nearField==5) && calDistance(f1.getfPos(nearField),mTrans[i])<100)
+				if((nearField==2 || nearField==5) && calDistance(f1.getfPos(nearField),mTrans[i])<distanceSet)
 				{
 					f1.setFMisEmpty(nearField);
 					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
@@ -569,7 +659,7 @@ void testApp::draw(){
 				nearField = f1.findNearestFieldAndMaker(mTrans[i]); // find near field and marker
 				dm = calDistance(f1.getfPos(nearField),mTrans[i]);
 				// if p1 attack and p2 defend
-				if(((nearField==1 || nearField==4) && calDistance(f1.getfPos(nearField),mTrans[i])<100))
+				if(((nearField==1 || nearField==4) && calDistance(f1.getfPos(nearField),mTrans[i])<distanceSet))
 				{
 					f1.setFMisEmpty(nearField); // clear field 1 to set atk card
 					f1.setFMisEmpty(3); // clear field 3 cause not be defender
@@ -578,7 +668,7 @@ void testApp::draw(){
 					if(f1.getMarkerIDsetted(nearField)==mIDscBack){PL.setTurn(1);PR.setTurn(0);} // set play turn
 				}
 				// if p2 attack and p1 defend
-				else if((nearField==3 || nearField==6) && calDistance(f1.getfPos(nearField),mTrans[i])<100)
+				else if((nearField==3 || nearField==6) && calDistance(f1.getfPos(nearField),mTrans[i])<distanceSet)
 				{
 					f1.setFMisEmpty(nearField); // clear field 6 to set atk card
 					f1.setFMisEmpty(4); // clear field 4 cause not be defender
@@ -624,13 +714,13 @@ void testApp::draw(){
 				nearField = f1.findNearestFieldAndMaker(mTrans[i]); // find near field and marker
 				dm = calDistance(f1.getfPos(nearField),mTrans[i]);
 				// check field slot is set by mIDscBack
-				if(mIDcAtkFront==mID[i] && nearField==1 && calDistance(f1.getfPos(nearField),mTrans[i])<100 && f1.getMarkerIDsetted(1)==mIDscBack)
+				if(mIDcAtkFront==mID[i] && nearField==1 && calDistance(f1.getfPos(nearField),mTrans[i])<distanceSet && f1.getMarkerIDsetted(1)==mIDscBack)
 				{
 					f1.setFMisEmpty(nearField); // clear slot for set new card
 					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
 				}
 				// check field slot is set by mIDscBack, check card flip is support card
-				if(findIndex(mIDscFront,mID[i])!=-1 && nearField==4 && calDistance(f1.getfPos(nearField),mTrans[i])<100 && f1.getMarkerIDsetted(4)==mIDscBack)
+				if(findIndex(mIDscFront,mID[i])!=-1 && nearField==4 && calDistance(f1.getfPos(nearField),mTrans[i])<distanceSet && f1.getMarkerIDsetted(4)==mIDscBack)
 				{
 					f1.setFMisEmpty(nearField); // clear slot for set new card
 					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
@@ -642,13 +732,13 @@ void testApp::draw(){
 				nearField = f1.findNearestFieldAndMaker(mTrans[i]); // find near field and marker
 				dm = calDistance(f1.getfPos(nearField),mTrans[i]);
 				// check field slot is set by mIDscBack
-				if(mIDcAtkFront==mID[i] && nearField==6 && calDistance(f1.getfPos(nearField),mTrans[i])<100 && f1.getMarkerIDsetted(6)==mIDscBack)
+				if(mIDcAtkFront==mID[i] && nearField==6 && calDistance(f1.getfPos(nearField),mTrans[i])<distanceSet && f1.getMarkerIDsetted(6)==mIDscBack)
 				{
 					f1.setFMisEmpty(nearField); // clear slot for set new card
 					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
 				}
 				// check field slot is set by mIDscBack, check card flip is support card
-				if(findIndex(mIDscFront,mID[i])!=-1 && nearField==3 && calDistance(f1.getfPos(nearField),mTrans[i])<100 && f1.getMarkerIDsetted(3)==mIDscBack)
+				if(findIndex(mIDscFront,mID[i])!=-1 && nearField==3 && calDistance(f1.getfPos(nearField),mTrans[i])<distanceSet && f1.getMarkerIDsetted(3)==mIDscBack)
 				{
 					f1.setFMisEmpty(nearField); // clear slot for set new card
 					d1 = f1.setFieldByMarkerID(nearField,mID[i]); // set card field by marker id
@@ -785,14 +875,14 @@ void testApp::draw(){
 			mTrans.push_back(artk.getTranslation(i));
 		}
 
-		effectrun = true;
 		for(int i=0; i<mID.size(); i++)
 		{
 			if(mID[i]==mIDcField){f1.updateCardFieldPosition(mTrans[i]);}; // update position of field card
 			nearField = f1.findNearestFieldAndMaker(mTrans[i]); // find near field and marker
 			dm = calDistance(f1.getfPos(nearField),mTrans[i]);
 			drawAR(mID[i],i); // draw object on marker
-		
+			
+			effectrun = true; // enable animation
 			if(PL.isTurn() && mID[i]==f1.getMarkerIDsetted(2))
 			{
 				effecttime = floor(fabs(f1.getfPos(2).x - f1.getfPos(5).x) + 0.5) - 20;
@@ -809,28 +899,35 @@ void testApp::draw(){
 			}
 		}
 
+		// show effect hp
 		if(effectx>=effecttime)
 		{
 			effectrun=false;effectx=0;effecttime=999;
-			
+			showhpdone=false;
 			// update HP
 			if(PL.isTurn())
 			{
 				PL.calculateHP(CalDmg.paDmg());
 				PR.calculateHP(CalDmg.pdDmg());
+				effecttime2 = 100;
+				effectrun2 = true;// start show effect damage
+				//showhpdone = true;
 			}
 			else if(PR.isTurn())
 			{
 				PR.calculateHP(CalDmg.paDmg());
 				PL.calculateHP(CalDmg.pdDmg());
+				effecttime2 = 100;
+				effectrun2 = true;// start show effect damage
+				//showhpdone = true;
 			}
 		}
 
-		if(PL.isAlive() && PR.isAlive() && effectrun!=true)
+		if(PL.isAlive() && PR.isAlive() && !effectrun /*&& !effectrun2 /*&& showhpdone*/)
 		{	
 			gameState = 3;	f1.setFMisEmpty(1);	f1.setFMisEmpty(3);	f1.setFMisEmpty(4);	f1.setFMisEmpty(6);
 			cout<<"Change gameState = 3 : Calculate damage completed and ending this turn"<<endl;
-		}else if(effectrun!=true)
+		}else if(effectrun!=true /*&& !effectrun2/*&& showhpdone*/)
 		{	
 			gameState = 7;
 			if(PL.isAlive()){
@@ -928,6 +1025,9 @@ void testApp::keyPressed(int key){
 	else if(key == 'z'){
 		dep=!dep;
 	}
+	else if(key == 'f'){
+		fmaker=!fmaker;
+	}
 	else if(key == 'r'){
 		gameState = 0;
 		f1.clearAll();
@@ -936,6 +1036,7 @@ void testApp::keyPressed(int key){
 		PR.~Player();
 		PR.calculateHP(-100);
 	}	
+
 	#ifdef CAMERA_CONNECTED
 	if(key == 's' || key == 'S') {
 		vidGrabber.videoSettings();
@@ -943,36 +1044,6 @@ void testApp::keyPressed(int key){
 	#endif
 
 }
-
-/* //--------------------------------------------------------------
-void testApp::keyReleased(int key){
-
-}
-
-//--------------------------------------------------------------
-void testApp::mouseMoved(int x, int y ){
-
-}
-
-//--------------------------------------------------------------
-void testApp::mouseDragged(int x, int y, int button){
-
-}
-
-//--------------------------------------------------------------
-void testApp::mousePressed(int x, int y, int button){
-
-}
-
-//--------------------------------------------------------------
-void testApp::mouseReleased(int x, int y, int button){
-
-}
-
-//--------------------------------------------------------------
-void testApp::windowResized(int w, int h){
-
-} */
 
 
 //--------------------- draw graphic on marker -----------------
@@ -1007,6 +1078,14 @@ void testApp::drawAR(int markerID,int mrIndex,string mname){
 	else if(markerID==mIDcFront[0]) // Dark Magician
 	{
 		glPushMatrix();
+		if(gameState==6)
+		{
+			if(PL.isTurn() && f1.getMarkerIDsetted(2)==markerID)
+			{glTranslatef(0,effectx,0);}
+			if(PR.isTurn() && f1.getMarkerIDsetted(5)==markerID)
+			{glTranslatef(0,effectx,0);}	
+		}
+			
 			mc1.setScale(1.0 + (mw - 75)*0.025,1.0 + (mw - 75)*0.025,1.0 + (mw - 75)*0.025);
 			mc1.setPosition(0,0,50.0 + (mw - 75)*1.5);
 			ofFill();
@@ -1032,6 +1111,13 @@ void testApp::drawAR(int markerID,int mrIndex,string mname){
 	else if(markerID==mIDcFront[1])
 	{
 		glPushMatrix();
+		if(gameState==6)
+		{
+			if(PL.isTurn() && f1.getMarkerIDsetted(2)==markerID)
+			{glTranslatef(0,effectx,0);}
+			if(PR.isTurn() && f1.getMarkerIDsetted(5)==markerID)
+			{glTranslatef(0,effectx,0);}	
+		}
 		glRotatef(180,0,0,1);
 		mc2.setScale(0.5,0.5,0.5);
 		mc2.setRotation(1,90,1,0,0);
@@ -1288,7 +1374,7 @@ void testApp::drawAR(int markerID,int mrIndex,string mname){
 			cardDef[0].draw(-20,-29,40,58); // draw card
 		glPopMatrix();		
 	}
-		else if(markerID==mIDscFront[1]) 
+	else if(markerID==mIDscFront[1]) 
 	{
 		glPushMatrix();
 			ofSetLineWidth(5);
@@ -1446,12 +1532,88 @@ void testApp::drawAR(int markerID,int mrIndex,string mname){
 					//it = 100;
 					ofSetColor(255,0,0);
 					glScalef(2,2,0);
-					ofDrawBitmapString("Game Over!!", -50, -75.0 - (mw - 75)*1.5);
+					ofDrawBitmapString("Game Over!!", -10, -75.0 - (mw - 75)*1.5);
 					ofDrawBitmapString("State Change to:" + ofToString(gameState), -50, 75.0 + (mw - 75)*1.5);
 				}
 			glPopMatrix();	
 		glPopMatrix();		
+	
+		// show maker id setted on field
+		if(fmaker)
+		{
+			glPushMatrix();
+				ofEnableAlphaBlending();    // turn on alpha blending
+				ofSetLineWidth(5);
+				ofNoFill();
+				ofSetColor(255, 0, 0,120);
+				glScalef(0.5,0.5,1);
+				glTranslatef(0-f1.getFw()*3 - f1.getFw()/2.0 ,f1.getFh()+f1.getFh()/2.0,0); // field 1
+				glRotatef(180 ,1 ,0 ,0 );
+				font[2].drawString(ofToString(f1.getMarkerIDsetted(1)),0,0);
+				ofDisableAlphaBlending();    // turn off alpha blending
+			glPopMatrix();
+			glPushMatrix();
+				ofEnableAlphaBlending();    // turn on alpha blending
+				ofSetLineWidth(5);
+				ofNoFill();
+				ofSetColor(255, 0, 0,120);
+				glScalef(0.5,0.5,1);
+				glTranslatef(0-f1.getFw()*3 -  f1.getFw()/2.0,0,0); // field 2
+				glRotatef(180 ,1 ,0 ,0 );
+				font[2].drawString(ofToString(f1.getMarkerIDsetted(2)),0,0);
+				ofDisableAlphaBlending();    // turn off alpha blending
+			glPopMatrix();
+			glPushMatrix();
+				ofEnableAlphaBlending();    // turn on alpha blending
+				ofSetLineWidth(5);
+				ofNoFill();
+				ofSetColor(255, 0, 0,120);
+				glScalef(0.5,0.5,1);
+				glTranslatef(0-f1.getFw()*3 - f1.getFw()/2.0 ,-f1.getFh()-f1.getFh()/2.0,0); // field 3
+				glRotatef(180 ,1 ,0 ,0 );
+				font[2].drawString(ofToString(f1.getMarkerIDsetted(3)),0,0);
+				ofDisableAlphaBlending();    // turn off alpha blending
+			glPopMatrix();
+
+			glPushMatrix();
+				ofEnableAlphaBlending();    // turn on alpha blending
+				ofSetLineWidth(5);
+				ofNoFill();
+				ofSetColor(255, 0, 0,120);
+				glScalef(0.5,0.5,1);
+				glTranslatef(f1.getFw()*3 + f1.getFw()/2.0 ,f1.getFh()+f1.getFh()/2.0,0); // field 4
+				glRotatef(180 ,1 ,0 ,0 );
+				font[2].drawString(ofToString(f1.getMarkerIDsetted(4)),0,0);
+				ofDisableAlphaBlending();    // turn off alpha blending
+			glPopMatrix();
+			glPushMatrix();
+				ofEnableAlphaBlending();    // turn on alpha blending
+				ofSetLineWidth(5);
+				ofNoFill();
+				ofSetColor(255, 0, 0,120);
+				glScalef(0.5,0.5,1);
+				glTranslatef(f1.getFw()*3 + f1.getFw()/2.0,0,0); // field 5
+				glRotatef(180 ,1 ,0 ,0 );
+				font[2].drawString(ofToString(f1.getMarkerIDsetted(5)),0,0);
+				ofDisableAlphaBlending();    // turn off alpha blending
+			glPopMatrix();
+			glPushMatrix();
+				ofEnableAlphaBlending();    // turn on alpha blending
+				ofSetLineWidth(5);
+				ofNoFill();
+				ofSetColor(255, 0, 0,120);
+				glScalef(0.5,0.5,1);
+				glTranslatef(f1.getFw()*3 + f1.getFw()/2.0 ,-f1.getFh()-f1.getFh()/2.0,0); // field 6
+				glRotatef(180 ,1 ,0 ,0 );
+				font[2].drawString(ofToString(f1.getMarkerIDsetted(6)),0,0);
+				ofDisableAlphaBlending();    // turn off alpha blending
+			glPopMatrix();
+			
+		}
 	}
+
+
+	
 
 	glPopMatrix();
 
@@ -1461,14 +1623,14 @@ void testApp::drawAR(int markerID,int mrIndex,string mname){
 void testApp::drawEffect(int mIndex){
 	artk.applyModelMatrix(mIndex);	
 	glPushMatrix();
-		ofSetLineWidth(1);
-		ofEnableSmoothing();
-		ofNoFill();
-		ofEnableAlphaBlending();    // turn on alpha blending
-		ofSetColor(255,238,98,230);
-		glTranslatef(0,30 + effectx,70);
-		glutSolidSphere(10,10,10);
-		ofDisableAlphaBlending();    // turn off alpha blending
+		//ofSetLineWidth(1);
+		//ofEnableSmoothing();
+		//ofNoFill();
+		//ofEnableAlphaBlending();    // turn on alpha blending
+		//ofSetColor(255,238,98,230);
+		//glTranslatef(0,30 + effectx,70);
+		//glutSolidSphere(10,10,10);
+		//ofDisableAlphaBlending();    // turn off alpha blending
 	glPopMatrix();
 }
 
