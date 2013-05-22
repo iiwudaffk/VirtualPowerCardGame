@@ -15,6 +15,6 @@ v1.1 [for aneiversary]
 ===============
 
 v1.0 [for present senior project]
-2013.05.17/n 5555555
+2013.05.17
 
 ===============
