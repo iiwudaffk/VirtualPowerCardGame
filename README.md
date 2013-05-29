@@ -6,7 +6,7 @@ This project uses openFrameworks 0.07 + ofxARToolKitPlus + ofx3DModelLoader
 ===============
 
 
-v1.1 [for aneiversary]
+v1.1 [for anniversary of 20th years faculty of Engineering NU]
 2013.05.22
 - show number marker id setted on field slot at near field 
 - change animation while battle state
