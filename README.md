@@ -2,6 +2,8 @@ Vitual Power Card Game
 ===============
 
 This project uses openFrameworks 0.07 + ofxARToolKitPlus + ofx3DModelLoader
+by IIwuDaFFK
+www.aekasit.in.th
 
 ===============
 ## Change log
