@@ -6,6 +6,12 @@
 //GLfloat lightTwoColor[] = {0.99, 0.99, 0.99, 1.0};
 
 //--------------------------------------------------------------
+testApp::testApp(int screenWidth,int screenHeight){
+	this->width = screenWidth;
+	this->height = screenHeight;
+}
+
+//--------------------------------------------------------------
 void testApp::setup(){
 	pict = false; 
 	hpbar  = true;
@@ -42,7 +48,7 @@ void testApp::setup(){
 	//prDis.setFromCenter(ofPoint(width - 100.0/2.0,height - 100.0/2.0),100.0,100.0);
 	
 	// setup all character cards
-	c1.setCName("Dark Magician");
+	c1.setCName("Assassin");
 	c1.setmIDBack(1);
 	c1.setmIDFront(2);
 	c1.setATK(40,60);
@@ -50,10 +56,10 @@ void testApp::setup(){
 	//float r1[10] = {0.5, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0, 1.5, 1.5, 2.0};
 	//c1.setAtkRate(r1);
 
-	c2.setCName("Twinhead Dragon");
+	c2.setCName("Goku");
 	c2.setmIDBack(1);
 	c2.setmIDFront(3);
-	c2.setATK(35,65);
+	c2.setATK(35,55);
 	c2.setDEF(25);
 	//float r2[10] = {0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.5, 1.5, 2.0};
 	//c2.setAtkRate(r2);
@@ -123,7 +129,7 @@ void testApp::setup(){
 
 	//delete r1,r2,r3,r4,r5;
 
-	width = 1280;	height = 800;
+	//width = 1280;	height = 800;
 
 	//glutInitDisplayMode(GLUT_DEPTH);
 	vidGrabber.setVerbose(true); // ทับซ้อนกันได้
@@ -217,17 +223,20 @@ void testApp::setup(){
     //glColorMaterial (GL_FRONT_AND_BACK, GL_DIFFUSE);
     //glEnable (GL_COLOR_MATERIAL);
 
-	mc1.loadModel("squirrel/Altair Model/altair.3ds",0.8);
+	mc1.loadModel("model/Altair Model/altair.3ds",0.8);
 	mc1.setPosition(0.0, 0.0, 0.0);
 	mc1.setRotation(1,90,1,0,0);
 
-	mc2.loadModel("squirrel/goku.3DS",0.75);
+	mc2.loadModel("model/goku.3DS",0.3);
+	mc2.setRotation(1,90,1,0,0);
+	mc2.setPosition(0,0,80);
 
-	mc3.loadModel("squirrel/goku.3DS",0.75);
+	mc3.loadModel("model/armyman.3DS",0.3);
+	mc3.setPosition(0.0, 0.0, 0.0);
+	mc3.setRotation(1,90,1,0,0);
 
-	mc4.loadModel("squirrel/goku.3DS",0.75);
-
-	mc5.loadModel("squirrel/goku_nofloor2.3DS",0.75);
+	//mc4.loadModel("model/goku.3DS",0.75);
+	//mc5.loadModel("model/armyman.3DS",0.3);
 	
 	//glPolygonMode(GL_FRONT, GL_FILL);//else glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	//glPolygonMode(GL_BACK, GL_LINE);
@@ -288,7 +297,7 @@ void testApp::update(){
 
 //--------------------------------------------------------------
 void testApp::draw(){
-	/*glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);*/
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    	
 	//if(!dep){glDisable(GL_DEPTH_TEST);}
 	
@@ -448,6 +457,7 @@ void testApp::draw(){
 		//{showhpdone=true;effectrun2=false;effectshow=0;effecttime2=999;}
 	}
 
+	// draw player's slot near hp bar
 	ofSetLineWidth(5);
 	ofNoFill();	
 	ofEnableAlphaBlending();    // turn on alpha blending
@@ -470,44 +480,30 @@ void testApp::draw(){
 	ofFill(); // enable fill color
 	glBegin(GL_POLYGON); // start draw polygon
 	ofSetColor(co0, 190); // set red color for empty hp
-	glVertex3f(100,height - 20,0); // top-left point
+	glVertex3f(100,height - 30,0); // top-left point
 	glVertex3f(100,height,0); // bottom-left point
 	ofSetColor(co1, 190); // set current color calculate from hp
 	glVertex3f((width/2.0) - (width/2.0 - 100) + PL.hp()*0.01*(width/2.0 - 100) - 2,height,0); // top-right point
-	glVertex3f((width/2.0) - (width/2.0 - 100) + PL.hp()*0.01*(width/2.0 - 100) - 2,height - 20,0); // bottom-right point
+	glVertex3f((width/2.0) - (width/2.0 - 100) + PL.hp()*0.01*(width/2.0 - 100) - 2,height - 30,0); // bottom-right point
 	glEnd();
 
 	glBegin(GL_POLYGON);
 	ofFill();
 	ofSetColor(co0, 190);
-	glVertex3f(width - 100,height - 20,0);
+	glVertex3f(width - 100,height - 30,0);
 	glVertex3f(width - 100,height,0);
 	ofSetColor(co2, 190);
 	glVertex3f((width/2.0) + (width/2.0 - 100) - PR.hp()*0.01*(width/2.0 - 100) + 2,height,0);
-	glVertex3f((width/2.0) + (width/2.0 - 100) - PR.hp()*0.01*(width/2.0 - 100) + 2,height - 20,0);
+	glVertex3f((width/2.0) + (width/2.0 - 100) - PR.hp()*0.01*(width/2.0 - 100) + 2,height - 30,0);
 	glEnd();
 
 	// draw hp slot
 	ofSetLineWidth(3);
 	ofNoFill();
-	glBegin(GL_LINE_LOOP);
-	ofSetColor(255, 0, 0, 235);
-	glVertex3f(100,height - 20,0);
-	glVertex3f(100,width - 2,0);
-	glVertex3f(width/2.0 - 1,width - 2,0);
-	glVertex3f(width/2.0 - 1,height - 20,0);
-	//glVertex3f(100,height - 20,0);
-	glEnd();
-
-	glBegin(GL_LINE_LOOP);
-	ofNoFill();
-	ofSetColor(0, 0, 255, 235);
-	glVertex3f(width - 100,height - 20,0);
-	glVertex3f(width - 100,width - 2,0);
-	glVertex3f(width/2.0 + 1,width - 2,0);
-	glVertex3f(width/2.0 + 1,height - 20,0);
-	//glVertex3f(width - 100,height - 20,0);
-	glEnd();
+	ofSetColor(255, 0, 0, 235); //red
+	ofRect(ofPoint(100,height - 30),width/2.0 - 100 - 1,30); //PL
+	ofSetColor(0, 0, 255, 235); //blue
+	ofRect(ofPoint(width/2,height - 30),width/2.0 - 100 - 1,30); //PR
 	
 	ofDisableAlphaBlending();   // turn off alpha
 	}
@@ -961,7 +957,7 @@ void testApp::draw(){
 
 	//glDisable (GL_DEPTH_TEST);
 	glFlush();
-	glutSwapBuffers();
+	//glutSwapBuffers();
 }
 
 //--------------------------------------------------------------
@@ -1118,11 +1114,11 @@ void testApp::drawAR(int markerID,int mrIndex,string mname){
 			if(PR.isTurn() && f1.getMarkerIDsetted(5)==markerID)
 			{glTranslatef(0,effectx,0);}	
 		}
-		glRotatef(180,0,0,1);
-		mc2.setScale(0.5,0.5,0.5);
-		mc2.setRotation(1,90,1,0,0);
-		mc2.setPosition(0,0,70);
-		
+
+		mc2.setScale(1.0 + (mw - 75)*0.025,1.0 + (mw - 75)*0.025,1.0 + (mw - 75)*0.025);
+		mc2.setPosition(0,0,50.0 + (mw - 75)*1.25);
+		ofFill();
+		glRotatef(180,0,0,1);	
 		mc2.draw();
 		glPopMatrix();
 
@@ -1145,11 +1141,19 @@ void testApp::drawAR(int markerID,int mrIndex,string mname){
 	else if(markerID==mIDcFront[2])
 	{
 		glPushMatrix();
-		glRotatef(180,0,0,1);
-		mc2.setScale(0.5,0.5,0.5);
-		mc2.setRotation(1,90,1,0,0);
-		mc2.setPosition(0,0,70);
-		mc2.draw();
+		if(gameState==6)
+		{
+			if(PL.isTurn() && f1.getMarkerIDsetted(2)==markerID)
+			{glTranslatef(0,effectx,0);}
+			if(PR.isTurn() && f1.getMarkerIDsetted(5)==markerID)
+			{glTranslatef(0,effectx,0);}	
+		}
+			
+			mc3.setScale(1.0 + (mw - 75)*0.025,1.0 + (mw - 75)*0.025,1.0 + (mw - 75)*0.025);
+			mc3.setPosition(0,0,50.0 + (mw - 75)*1.5);
+			ofFill();
+			glRotatef(180,0,0,1);
+			mc3.draw();
 		glPopMatrix();
 
 		glPushMatrix();

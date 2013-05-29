@@ -19,6 +19,7 @@ using namespace std;
 class testApp : public ofBaseApp{
 
 public:
+	testApp(int screenWidth,int screenHeight);
 	void setup();
 	void update();
 	void draw();
